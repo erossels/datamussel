@@ -1,0 +1,85 @@
+.navbar{
+  background-color:#092A30!important;
+  border-color:#092A30!important;
+}
+
+body {
+  font-family: sans-serif!important;
+}
+
+
+.li .a {
+  background-color:#092A30!important;
+  border-color:#092A30!important;
+}
+
+#dashboard-container {
+  background-color: #FFFFFF!important;
+  margin-left = 200px!important;
+}
+
+.chart-wrapper .chart-stage {
+    overflow-y: scroll;
+    overflow-x: auto;
+    position: relative;
+}
+
+.navbar-inverse .navbar-nav>.active>a, .navbar-inverse .navbar-nav>.active>a:hover, .navbar-inverse .navbar-nav>.active>a:focus {
+    color: #092A30!important;
+    background-color: #F4D19F!important;
+}
+
+div .plotly-graph-div {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+table {
+  display:block!important;
+  padding-left: 25px;
+  padding-right: 25px;
+  margin: 25px 0!important;
+  align:center!important;
+  border-collapse: collapse!important;
+  font-size: 0.9em!important;
+  font-family: sans-serif!important;
+}
+
+thead tr {
+    background-color: #F4D19F!important;
+    color: #092A30!important;
+    text-align: left;
+}
+
+th, td {
+    padding: 8px 11px;
+}
+
+tbody tr {
+    border-bottom: thin solid #dddddd;
+}
+
+tbody tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+}
+
+tbody tr:last-of-type {
+    border-bottom: 2px solid #092A30!important;
+}
+
+tbody tr.active-row {
+    font-weight: bold;
+    color: #009879;
+}
+
+.contenedor {
+  margin: auto;
+  width: 100%;
+  padding: 5px;
+  
+}
+
+#section-filtros {
+    padding-left: 20px!important;
+}

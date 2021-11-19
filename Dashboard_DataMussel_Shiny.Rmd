@@ -1,0 +1,960 @@
+---
+title: "DataMussel"
+author: ""
+output:
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    css: CSS/datamussel.css
+runtime: shiny
+resource_files:
+- /DataTables-1.11.3/images/sort_both.png
+- Procesos_Producto_2021.csv
+- data_mussel_2021.csv
+- Procesos_Ingresos_2021.csv
+- Procesos_Dotacion_2021.csv
+- data_mussel_consolidado_precios.csv
+- Procesos_Dotacion_Consolidado.csv
+- Procesos_Ingresos_Consolidado.csv
+- Procesos_Producto_Consolidado.csv
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(tidyverse)
+library(shiny)
+library(ggplot2)
+library(plotly)
+library(jsonlite)
+library(flexdashboard)
+library(reticulate)
+library(kableExtra)
+library(magrittr)
+library(dplyr)
+# 
+# reticulate::virtualenv_create(envname = 'python3_env',python = '/usr/bin/python3')
+# reticulate::source_python("preprocesamiento.py")
+#                  
+# 
+# reticulate::virtualenv_install('python3_env',
+#                                packages = c('numpy','pandas','plotly','seaborn'))
+# 
+# reticulate::use_virtualenv('python3_env', required = T)
+
+use_condaenv('r-reticulate')
+
+
+
+```
+
+
+
+Sidebar {.sidebar}
+=======================================================================
+
+### Filtros
+
+```{r}
+selectInput(
+  inputId = 'InputEmpresa',
+  label = 'Seleccionar Empresa',
+  choices = c("Data Mussel","Manuelita", "Sudmaris", "Blue Shell", "Camanchaca", "Landes", "St Andrews"),
+  selected = 'Data Mussel'
+)
+
+selectInput(
+  inputId = 'InputAno',
+  label = 'Seleccionar Periodo',
+  choices = c(2020,2021),
+  selected = 2021
+)
+
+
+selectInput(
+  inputId = 'InputMes',
+  label = 'Seleccionar Mes',
+  choices = c("Ene","Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"),
+  selected = 'Ene'
+)
+
+selectInput(
+  inputId = 'InputSemana',
+  label = 'Seleccionar Semana',
+  choices = c(25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40),
+  selected = 25
+)
+
+
+```
+
+Precios
+=======================================================================
+
+Column {.tabset}
+-----------------------------------------------------------------------
+
+### Índice por Calibre
+
+<div class='col-md-6'>
+
+<div class='contenedor'>
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Server component
+output$tableset17 <- renderText({
+  
+tabla <- precios_carne_granel(input$InputSemana, input$InputAno)
+rows <- nrow(tabla)
+cols <- ncol(tabla)
+
+if (cols > 0) {
+tabla %>% 
+  kbl(caption= paste("Carne granel - Semana ", input$InputSemana,'-', input$InputAno), digits=1, format.args=list(big.mark = ','), col.names=c("Indice USD/KG", "Cantidad", "Distribución","N Empresas"),align = "c")  %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 11, html_font='Arial') %>% column_spec(1, bold = T, border_right = T, border_left = T) %>%
+  column_spec(cols+1, border_right = T) %>%
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(rows-1, extra_css = "border-top: 1px solid" ) %>% 
+  row_spec(rows, bold=T, extra_css = "border-bottom: 1px solid" )
+}
+
+})
+
+# UI component
+htmlOutput("tableset17") 
+  
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Server component
+output$tableset18 <- renderText({
+  
+tabla <- precios_carne_retail(input$InputSemana, input$InputAno)
+rows <- nrow(tabla)
+cols <- ncol(tabla)
+
+if (cols > 0) {
+tabla %>% 
+  kbl(caption= paste("Carne retail - Semana ", input$InputSemana,'-', input$InputAno), digits=1, format.args=list(big.mark = ','), col.names=c("Indice USD/KG", "Cantidad", "Distribución"), align = "c")  %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 11, html_font='Arial') %>% column_spec(1, bold = T, border_right = T, border_left = T) %>%
+  column_spec(cols+1, border_right = T) %>%
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(rows-1, extra_css = "border-top: 1px solid" ) %>% 
+  row_spec(rows, bold=T, extra_css = "border-bottom: 1px solid" )
+}
+
+})
+
+# UI component
+htmlOutput("tableset18") 
+  
+```
+</div>
+
+</div>
+
+
+<div class='col-md-6'>
+
+<div class='contenedor'>
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Server component
+output$tableset19 <- renderText({
+  
+tabla <- precios_entero(input$InputSemana, input$InputAno)
+rows <- nrow(tabla)
+cols <- ncol(tabla)
+
+if (cols > 0) {
+tabla %>% 
+  kbl(caption= paste("Entero - Semana ", input$InputSemana,'-', input$InputAno), digits=1, format.args=list(big.mark = ','), col.names=c("Indice USD/KG", "Cantidad", "Distribución", "N Empresas"), align = "c")  %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 11, html_font='Arial') %>% column_spec(1, bold = T, border_right = T, border_left = T) %>%
+  column_spec(cols+1, border_right = T) %>%
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(rows-1, extra_css = "border-top: 1px solid" ) %>% 
+  row_spec(rows, bold=T, extra_css = "border-bottom: 1px solid" )
+}
+
+})
+
+# UI component
+htmlOutput("tableset19") 
+  
+
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Server component
+output$tableset20 <- renderText({
+
+tabla <- precios_entero_con_salsa(input$InputSemana, input$InputAno)
+rows <- nrow(tabla)
+cols <- ncol(tabla)
+
+if (cols > 0) {
+tabla %>% 
+  kbl(caption= paste("Entero con salsa - Semana ", input$InputSemana,'-', input$InputAno), digits=1, format.args=list(big.mark = ','), col.names=c("Indice USD/KG", "Cantidad", "Distribución"), align = "c")  %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 11, html_font='Arial') %>% column_spec(1, bold = T, border_right = T, border_left = T) %>%
+  column_spec(cols+1, border_right = T) %>%
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(rows-1, extra_css = "border-top: 1px solid" ) %>% 
+  row_spec(rows, bold=T, extra_css = "border-bottom: 1px solid" )
+}
+
+})
+
+# UI component
+htmlOutput("tableset20") 
+
+```
+
+</div>
+
+</div>
+
+### Toneladas
+
+<div class='contenedor'>
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+output$plot9 <- renderPlotly({
+  jsonplot9 <- grafico_toneladas_semanas(input$InputAno)
+  
+  plotly::as_widget(
+  jsonlite::fromJSON(
+    jsonplot9 , simplifyVector=FALSE))
+}
+)
+
+plotlyOutput("plot9") 
+
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+output$plot10 <- renderPlotly({
+  jsonplot10 <- grafico_toneladas_semanas_carne_entero(input$InputAno)
+  
+  plotly::as_widget(
+  jsonlite::fromJSON(
+    jsonplot10 , simplifyVector=FALSE))
+}
+)
+
+plotlyOutput("plot10") 
+
+```
+
+</div>
+
+### Precios 
+
+<div class='contenedor'>
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+output$plot11 <- renderPlotly({
+  jsonplot11 <- grafico_precios_semanas_carne_calibre(input$InputAno)
+  
+  plotly::as_widget(
+  jsonlite::fromJSON(
+    jsonplot11 , simplifyVector=FALSE))
+}
+)
+
+plotlyOutput("plot11") 
+
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+output$plot12 <- renderPlotly({
+  jsonplot12 <- grafico_precios_semanas_carne_retail(input$InputAno)
+  
+  plotly::as_widget(
+  jsonlite::fromJSON(
+    jsonplot12 , simplifyVector=FALSE))
+}
+)
+
+plotlyOutput("plot12") 
+
+```
+
+
+</div>
+    
+       
+       
+            
+Ingreso MMPP
+=======================================================================
+
+Column {.tabset}
+-----------------------------------------------------------------------
+
+### MMPP
+
+<div class='contenedor'>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+reticulate::source_python("preprocesamiento.py")
+
+# server component
+output$tableset <- renderText({
+
+tabla <- ingresos_totales_empresa(input$InputEmpresa, input$InputAno)
+cols <- ncol(tabla)
+
+tabla %>% kbl(caption= paste("Ingreso materia prima ",input$InputEmpresa,'-', input$InputAno), digits=1, format.args=list(big.mark = ','),align = "c") %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 11, html_font = "Arial") %>% 
+  column_spec(1, bold = T, border_right = T, border_left = T) %>%
+  column_spec(2, bold = T, border_right = T) %>% 
+  column_spec(cols-4, border_right = T) %>% 
+  column_spec(cols-3, bold = T) %>%
+  column_spec(cols-2, bold = T, border_right = T) %>% 
+  column_spec(cols-1, bold = T) %>%
+  column_spec(cols, bold = T, border_right = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(3, bold = T, extra_css = "border-bottom: 1px solid") %>% 
+  row_spec(6, bold = T, extra_css = "border-bottom: 1px solid") %>% 
+  row_spec(7, bold = T, extra_css = "border-bottom: 1px solid")
+  
+})
+
+# UI component
+htmlOutput("tableset") 
+
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# server component
+output$tableset2 <- renderText({
+
+tabla <- ingresos_totales_industria(input$InputAno)
+cols <- ncol(tabla)
+
+tabla %>% kbl(caption= paste("Ingreso materia prima - Todas las industrias ",input$InputAno), digits=1, format.args=list(big.mark = ','),align = "c")  %>%  
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 11, html_font='Arial') %>% 
+  column_spec(1, bold = T, border_right = T, border_left = T) %>%
+  column_spec(2, bold = T, border_right = T) %>% 
+  column_spec(cols-4, bold = T, border_left = T) %>% 
+  column_spec(cols-3, bold = T, border_right = T) %>%
+  column_spec(cols-2, bold = T) %>% 
+  column_spec(cols-1, bold = T) %>%
+  column_spec(cols, bold = T, border_right = T, border_left = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(3, bold = T, extra_css = "border-bottom: 1px solid") %>% 
+  row_spec(6, bold = T, extra_css = "border-bottom: 1px solid") %>% 
+  row_spec(7, bold = T, extra_css = "border-bottom: 1px solid")
+
+})
+
+# UI component
+htmlOutput("tableset2") 
+
+
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+reticulate::source_python("preprocesamiento.py")
+
+# server component
+output$tableset3 <- renderText({
+
+tabla <- ingresos_totales_otras(input$InputEmpresa, input$InputAno)
+cols <- ncol(tabla)
+
+tabla %>% 
+  kbl(caption= paste("Ingreso materia prima - Otras Industrias ",input$InputAno),digits=1, format.args=list(big.mark = ','),align = "c")  %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 12, html_font='Arial') %>% 
+  column_spec(1, bold = T, border_right = T, border_left = T) %>%
+  column_spec(2, bold = T, border_right = T) %>% 
+  column_spec(cols-4, bold=T, border_left = T) %>% 
+  column_spec(cols-3, bold = T, border_right = T) %>%
+  column_spec(cols-2, bold = T) %>% 
+  column_spec(cols-1, bold = T) %>%
+  column_spec(cols, bold = T, border_right = T, border_left = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(3, bold = T, extra_css = "border-bottom: 1px solid") %>% 
+  row_spec(6, bold = T, extra_css = "border-bottom: 1px solid") %>% 
+  row_spec(7, bold = T, extra_css = "border-bottom: 1px solid")
+
+})
+
+
+# UI component
+htmlOutput("tableset3") 
+
+```
+
+</div>
+
+### Detalle Materia Prima
+
+<div class='contenedor'>
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# server component
+output$tableset4 <- renderText({
+
+tabla <- ingresos_acumulado(input$InputEmpresa, input$InputAno)
+cols <- ncol(tabla)
+
+rows <- nrow(tabla)
+cols <- ncol(tabla)
+tabla %>% 
+  kbl(caption= paste("Detalle materia prima acumulado ", input$InputAno),digits=1, format.args=list(big.mark = ','),col.names = c('Propietario', 'Indicadores', "Total", "Promedio","Total", "Promedio","Total", "Promedio", "N Empresas" ),align = "c")  %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 11, html_font='Arial') %>% 
+  column_spec(1, bold = T, border_right = T, border_left = T) %>%
+  column_spec(2, bold = T, border_right = T) %>% 
+  column_spec(cols, border_right = T, border_left= T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(rows, extra_css = "border-bottom: 1px solid" ) %>% 
+  add_header_above(c(" " = 2, "Industria" = 2, "Empresa" = 2, "Otras Industrias" = 2, " "= 1))
+
+})
+
+
+# UI component
+htmlOutput("tableset4") 
+
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# server component
+output$tableset5 <- renderText({
+
+tabla_all_mes <- ingresos_mes(input$InputEmpresa, input$InputMes, input$InputAno)
+
+rows <- nrow(tabla_all_mes)
+cols <- ncol(tabla_all_mes)
+tabla_all_mes %>% 
+  kbl(caption= paste("Detalle materia primas - ",input$InputMes," ", input$InputAno),digits=1, format.args=list(big.mark = ','),col.names = c('Propietario', 'Indicadores', "Total", "Promedio","Total", "Promedio","Total", "Promedio", "N Empresas" ),align = "c")  %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 11, html_font='Arial') %>% 
+  column_spec(1, bold = T, border_right = T, border_left = T) %>%
+  column_spec(2, bold = T, border_right = T) %>% 
+  column_spec(cols, border_right = T, border_left = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(rows, extra_css = "border-bottom: 1px solid" ) %>% 
+  add_header_above(c(" " = 2, "Industria" = 2, "Empresa" = 2, "Otras Industrias" = 2, " " = 1))
+
+})
+
+
+# UI component
+htmlOutput("tableset5") 
+```
+
+
+</div>
+
+### Materia prima por origen 
+
+<div class='contenedor'>
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+output$plot1 <- renderPlotly({
+  jsonplot <- grafico_MMPP_origen(input$InputAno)
+  
+  plotly::as_widget(
+  jsonlite::fromJSON(
+    jsonplot, simplifyVector=FALSE))
+}
+)
+
+plotlyOutput("plot1")
+
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+output$plot2 <- renderPlotly({
+  jsonplot2 <- grafico_MMPP_origen_emp(input$InputEmpresa, input$InputAno)
+  
+  plotly::as_widget(
+  jsonlite::fromJSON(
+    jsonplot2, simplifyVector=FALSE))
+}
+)
+
+plotlyOutput("plot2")
+
+```
+
+</div>
+  
+### Materia prima bruta por origen 
+
+<div class='contenedor'>
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+output$plot3 <- renderPlotly({
+  jsonplot3 <- grafico_MMPP_Bruta_emp(input$InputEmpresa, input$InputAno)
+  
+  plotly::as_widget(
+  jsonlite::fromJSON(
+    jsonplot3, simplifyVector=FALSE))
+}
+)
+
+plotlyOutput("plot3")
+
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+output$plot4 <- renderPlotly({
+  jsonplot4 <- grafico_unidades_por_kilo(input$InputEmpresa, input$InputAno)
+  
+  plotly::as_widget(
+  jsonlite::fromJSON(
+    jsonplot4, simplifyVector=FALSE))
+}
+)
+
+plotlyOutput("plot4")
+
+```
+
+</div>
+
+
+### Rechazo
+
+<div class='contenedor'>
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+output$plot5 <- renderPlotly({
+  jsonplot5 <- grafico_rechazo(input$InputAno)
+  
+  plotly::as_widget(
+  jsonlite::fromJSON(
+    jsonplot5, simplifyVector=FALSE))
+}
+)
+
+plotlyOutput("plot5")
+
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+output$plot6 <- renderPlotly({
+  jsonplot6<- grafico_rechazo_origen(input$InputEmpresa, input$InputAno)
+  
+  plotly::as_widget(
+  jsonlite::fromJSON(
+    jsonplot6 , simplifyVector=FALSE))
+}
+)
+
+plotlyOutput("plot6")
+
+```
+
+</div>
+
+Productos
+=======================================================================
+
+Column {.tabset}
+-----------------------------------------------------------------------
+
+### Resumen
+
+<div class='contenedor'>
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# server component
+output$tableset6 <- renderText({
+tabla <- resumen_productos(input$InputAno)
+rows <- nrow(tabla)
+cols <- ncol(tabla)
+tabla %>% 
+  kbl(caption= paste("Resumen mensual producto terminado - Industria ", input$InputAno),digits=1, format.args=list(big.mark = ','),align = "c")  %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 11, html_font='Arial') %>% 
+  column_spec(1, bold = T, border_right = T, border_left = T) %>%
+  column_spec(cols-5, border_right = T) %>% 
+  column_spec(cols-3, border_right = T) %>% 
+  column_spec(cols -1, border_right = T) %>% 
+  column_spec(cols, border_right = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(rows, extra_css = "border-bottom: 1px solid" )
+
+})
+
+
+# UI component
+htmlOutput("tableset6") 
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# server component
+output$tableset7 <- renderText({
+tabla <- resumen_mensual_producto(input$InputEmpresa, input$InputAno)
+rows <- nrow(tabla)
+cols <- ncol(tabla)
+tabla %>% 
+  kbl(caption= paste("Resumen mensual producto terminado ",input$InputEmpresa, '-', input$InputAno),digits=1, format.args=list(big.mark = ','),align = "c")  %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 11, html_font='Arial') %>% 
+  column_spec(1, bold = T, border_right = T, border_left = T) %>%
+  column_spec(cols-4, border_right = T) %>% 
+  column_spec(cols-2, border_right = T) %>% 
+  column_spec(cols, border_right = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(rows, extra_css = "border-bottom: 1px solid" )
+
+})
+
+
+# UI component
+htmlOutput("tableset7") 
+
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Server component
+output$tableset8 <- renderText({
+  tabla <- resumen_mensual_otras(input$InputEmpresa, input$InputAno)
+  rows <- nrow(tabla)
+  cols <- ncol(tabla)
+  tabla %>% 
+    kbl(caption= paste("Resumen mensual producto terminado - Otras Industrias ", input$InputAno),digits=1, format.args=list(big.mark = ','),align = "c")  %>%
+    kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 11, html_font='Arial') %>% 
+    column_spec(1, bold = T, border_right = T, border_left = T) %>%
+    column_spec(cols-5, border_right = T) %>% 
+    column_spec(cols-3, border_right = T) %>% 
+    column_spec(cols-1, border_right = T) %>% 
+    column_spec(cols, border_right = T) %>% 
+    row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+    row_spec(rows, extra_css = "border-bottom: 1px solid" )
+  
+})
+
+
+# UI component
+htmlOutput("tableset8") 
+
+```
+
+
+</div>
+
+### Detalle Producto
+
+<div class='contenedor'>
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Server component
+output$tableset9 <- renderText({
+  tabla_all_mes <- detalle_productos(input$InputEmpresa, input$InputAno)
+  
+  rows <- nrow(tabla_all_mes)
+  cols <- ncol(tabla_all_mes)
+  tabla_all_mes %>% 
+    kbl(caption= paste("Detalle Producto Terminado por Calibre Acumulado", input$InputAno),digits=1, format.args=list(big.mark = ','),col.names = c("Producto", "Calibre", "Total", "Promedio","Total", "Promedio","Total", "Promedio", "N Empresas"),align = "c")  %>%
+    kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 11, html_font='Arial') %>% 
+    column_spec(1, bold = T, border_right = T, border_left = T) %>%
+    column_spec(2, bold = T, border_right = T) %>% 
+    column_spec(4, bold = T, border_right = T) %>% 
+    column_spec(6, bold = T, border_right = T) %>% 
+    column_spec(cols, border_right = T) %>% 
+    row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+    row_spec(rows-1, extra_css = "border-bottom: 1px solid" ) %>% 
+    row_spec(rows, extra_css = "border-bottom: 1px solid" ) %>% 
+    add_header_above(c(" " = 2, "Industria" = 2, "Empresa" = 2, "Otras Industrias" = 3))
+})
+
+
+# UI component
+htmlOutput("tableset9") 
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Server component
+output$tableset10 <- renderText({
+  tabla_all_mes <- detalle_productos_mes(input$InputEmpresa, input$InputMes, input$InputAno)
+  
+  rows <- nrow(tabla_all_mes)
+  cols <- ncol(tabla_all_mes)
+  tabla_all_mes %>% 
+    kbl(caption= paste("Detalle Producto Terminado por Calibre Mes", input$InputAno),digits=1, format.args=list(big.mark = ','),col.names = c("Producto", "Calibre", "Total", "Promedio","Total", "Promedio","Total", "Promedio", "N Empresas"),align = "c")  %>%
+    kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 11, html_font='Arial') %>% 
+    column_spec(1, bold = T, border_right = T, border_left = T) %>%
+    column_spec(2, bold = T, border_right = T) %>% 
+    column_spec(4, bold = T, border_right = T) %>% 
+    column_spec(6, bold = T, border_right = T) %>% 
+    column_spec(cols, border_right = T) %>% 
+    row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+    row_spec(rows-1, extra_css = "border-bottom: 1px solid" ) %>% 
+    row_spec(rows, extra_css = "border-bottom: 1px solid" ) %>% 
+    add_header_above(c(" " = 2, "Industria" = 2, "Empresa" = 2, "Otras Industrias" = 3))
+  
+})
+
+
+# UI component
+htmlOutput("tableset10") 
+
+```
+</div>
+
+
+Dotación
+=======================================================================
+
+Column {.tabset}
+-----------------------------------------------------------------------
+
+### Resumen
+
+<div class='contenedor'>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Server component
+output$tableset11 <- renderText({
+
+tabla <- resumen_dotacion_industria(input$InputAno)
+rows <- nrow(tabla)
+cols <- ncol(tabla)
+tabla %>% 
+  kbl(caption= paste("Resumen Mensual dotación Industria", input$InputAno), digits=1, format.args=list(big.mark = ','),align = "c")  %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 11, html_font='Arial') %>% column_spec(1, bold = T, border_right = T, border_left = T) %>%
+  column_spec(cols+1, border_right = T, border_left= T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(rows, extra_css = "border-bottom: 1px solid" )
+
+})
+
+
+# UI component
+htmlOutput("tableset11") 
+
+
+
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Server component
+output$tableset12 <- renderText({
+
+tabla <- resumen_dotacion_empresa(input$InputEmpresa, input$InputAno)
+rows <- nrow(tabla)
+cols <- ncol(tabla)
+
+tabla %>% 
+  kbl(caption= paste("Resumen Mensual dotación ",input$InputEmpresa,'-', input$InputAno), digits=2, format.args=list(big.mark = ','),align = "c")  %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 11, html_font='Arial') %>% column_spec(1, bold = T, border_right = T, border_left = T) %>%
+  column_spec(cols+1, border_right = T, border_left = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(rows, extra_css = "border-bottom: 1px solid" )
+
+})
+
+# UI component
+htmlOutput("tableset12") 
+
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Server component
+output$tableset13 <- renderText({
+
+tabla <- resumen_dotacion_otras(input$InputEmpresa, input$InputAno)
+rows <- nrow(tabla)
+cols <- ncol(tabla)
+
+tabla %>% 
+  kbl(caption= paste("Resumen Mensual dotación Otras Industrias", input$InputAno), digits=1, format.args=list(big.mark = ','),align = "c")  %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 11, html_font='Arial') %>% column_spec(1, bold = T, border_right = T, border_left = T) %>%
+  column_spec(cols+1, border_right = T, border_left = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(rows, extra_css = "border-bottom: 1px solid" )
+
+})
+
+# UI component
+htmlOutput("tableset13") 
+
+```
+
+</div>
+
+### Detalle
+
+<div class='contenedor'>
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Server component
+output$tableset14 <- renderText({
+
+tabla_all_mes <- detalle_dotacion_mensual(input$InputEmpresa, input$InputMes, input$InputAno)
+rows <- nrow(tabla_all_mes)
+cols <- ncol(tabla_all_mes)
+
+if (cols < 5) {
+tabla_all_mes %>% 
+  kbl(caption=paste("Detalle dotación - Mes actual", input$InputAno), digits=1, format.args=list(big.mark = ','), col.names = c('', 'Total', 'Promedio', '%'),align = "c")  %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 11, html_font='Arial') %>% 
+  column_spec(1, bold = T, border_right = T, border_left = T) %>% 
+  column_spec(cols, border_right = T) %>% 
+  column_spec(4, border_right = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(2, extra_css = "border-bottom: 1px solid; border-top: 1px solid" ) %>% 
+  row_spec(3, extra_css = "border-bottom: 1px solid; border-top: 1px solid" ) %>% 
+  row_spec(5, extra_css = "border-bottom: 1px solid; border-top: 1px solid" ) %>% 
+  row_spec(6, extra_css = "border-bottom: 1px solid; border-top: 1px solid" ) %>% 
+  row_spec(8, extra_css = "border-bottom: 1px solid; border-top: 1px solid" ) %>% 
+  row_spec(9, extra_css = "border-bottom: 1px solid; border-top: 1px solid" ) %>% 
+  row_spec(rows, extra_css = "border-bottom: 1px solid" ) %>% 
+  add_header_above(c(" " = 1,"Empresa" = 3))
+} else {
+tabla_all_mes %>% 
+  kbl(caption=paste("Detalle dotación - Mes actual", input$InputAno), digits=1, format.args=list(big.mark = ','), col.names = c('', 'Total', 'Promedio', '%', 'Total', 'Promedio', '%', 'Total', 'Promedio', '%'),align = "c")  %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 11, html_font='Arial') %>% 
+  column_spec(1, bold = T, border_right = T, border_left = T) %>% 
+  column_spec(cols, border_right = T) %>% 
+  column_spec(4, border_right = T) %>% 
+  column_spec(7, border_right = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(2, extra_css = "border-bottom: 1px solid; border-top: 1px solid" ) %>% 
+  row_spec(3, extra_css = "border-bottom: 1px solid; border-top: 1px solid" ) %>% 
+  row_spec(5, extra_css = "border-bottom: 1px solid; border-top: 1px solid" ) %>% 
+  row_spec(6, extra_css = "border-bottom: 1px solid; border-top: 1px solid" ) %>% 
+  row_spec(8, extra_css = "border-bottom: 1px solid; border-top: 1px solid" ) %>% 
+  row_spec(9, extra_css = "border-bottom: 1px solid; border-top: 1px solid" ) %>% 
+  row_spec(rows, extra_css = "border-bottom: 1px solid" ) %>% 
+  add_header_above(c(" " = 1, "Industria" = 3, "Empresa" = 3, "Otras Industrias" = 3))
+}
+
+})
+
+# UI component
+htmlOutput("tableset14") 
+
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Server component
+output$tableset15 <- renderText({
+
+tabla_all_mes <- detalle_dotacion_areas(input$InputEmpresa, input$InputMes, input$InputAno)
+rows <- nrow(tabla_all_mes)
+cols <- ncol(tabla_all_mes)
+
+
+if (cols  < 5) {
+tabla_all_mes %>% 
+  kbl(caption= paste("Detalle dotación por Área de trabajo - Mes actual", input$InputAno),digits=1, format.args=list(big.mark = ','),align = "c")  %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 11, html_font='Arial') %>% 
+  column_spec(1, bold = T, border_right = T, border_left = T) %>% 
+  column_spec(cols+1,border_right = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(rows-1, extra_css = "border-bottom: 1px solid" ) %>% 
+  row_spec(rows, bold = T, extra_css = "border-bottom: 1px solid" ) %>% 
+  add_header_above(c(" " = 1,"Empresa" = 6))
+
+} else {
+rows <- nrow(tabla_all_mes)
+cols <- ncol(tabla_all_mes)
+tabla_all_mes %>% 
+  kbl(caption= paste("Detalle dotación por Área de trabajo - Mes actual", input$InputAno),digits=1, format.args=list(big.mark = ','),align = "c")  %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 11, html_font='Arial') %>% 
+  column_spec(1, bold = T, border_right = T, border_left = T) %>% 
+  column_spec(7, border_right = T) %>% 
+  column_spec(13, border_right = T) %>% 
+  column_spec(cols+1,border_right = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(rows-1, extra_css = "border-bottom: 1px solid" ) %>% 
+  row_spec(rows, bold = T, extra_css = "border-bottom: 1px solid" ) %>% 
+  add_header_above(c(" " = 1, "Industria" = 6, "Empresa" = 6, "Otras Industrias" = 6))
+
+}
+
+})
+
+# UI component
+htmlOutput("tableset15") 
+
+
+
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Server component
+output$tableset16 <- renderText({
+
+tabla <- detalle_dotacion_mes(input$InputEmpresa, input$InputMes, input$InputAno)
+rows <- nrow(tabla)
+cols <- ncol(tabla)
+
+if (cols < 3) {
+tabla %>% 
+  kbl(caption= paste("Detalle Indicadores Dotación", input$InputAno), digits=1, format.args=list(big.mark = ','), col.names= c(input$InputEmpresa) ,align = "c")  %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 11, html_font='Arial') %>% column_spec(1, bold = T, border_right = T, border_left = T) %>%
+  column_spec(2, bold = T, border_right = T) %>%
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(rows, extra_css = "border-bottom: 1px solid" )
+} else {
+tabla %>% 
+  kbl(caption= paste("Detalle Indicadores Dotación", input$InputAno), digits=1, format.args=list(big.mark = ','), col.names= c('Industria',input$InputEmpresa, 'Otras empresas'),align = "c")  %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 11, html_font='Arial') %>% column_spec(1, bold = T, border_right = T, border_left = T) %>%
+  column_spec(4, bold = T, border_right = T) %>%
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(rows, extra_css = "border-bottom: 1px solid" )
+}
+
+})
+
+# UI component
+htmlOutput("tableset16") 
+
+
+```
+
+</div>
+
+### Gráficos
+
+<div class='contenedor'>
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+output$plot7 <- renderPlotly({
+  jsonplot7<- grafico_dotacion(input$InputAno)
+  
+  plotly::as_widget(
+  jsonlite::fromJSON(
+    jsonplot7 , simplifyVector=FALSE))
+}
+)
+
+plotlyOutput("plot7") 
+
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+output$plot8 <- renderPlotly({
+  jsonplot8<- grafico_dotacion_contrato(input$InputAno)
+  
+  plotly::as_widget(
+  jsonlite::fromJSON(
+    jsonplot8 , simplifyVector=FALSE))
+}
+)
+
+plotlyOutput("plot8") 
+
+```
+
+</div>
+

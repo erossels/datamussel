@@ -1,0 +1,26 @@
+{
+    "id": "76203DE9",
+    "path": "C:/Users/erossel/Dropbox/Salmon Derivates/Datamussel/Data mensual y semanal/Procesamiento/preprocesamiento.py",
+    "project_path": "preprocesamiento.py",
+    "type": "python",
+    "hash": "756775386",
+    "contents": "",
+    "dirty": false,
+    "created": 1637032509251.0,
+    "source_on_save": false,
+    "relative_order": 3,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "3743,23",
+        "scrollLine": "3742"
+    },
+    "folds": "0|64|116|21|\n118|43|257|19|\n259|61|395|19|\n397|57|911|17|\n913|64|1432|21|\n1434|36|1553|22|\n1555|62|1683|22|\n1685|61|1820|22|\n1822|64|1971|22|\n1973|32|2112|22|\n2114|62|2253|22|\n2255|34|2359|14|\n2361|63|2441|14|\n2443|60|2541|14|\n2543|56|2763|20|\n2765|73|2981|22|\n2983|43|3133|16|\n3276|63|3427|16|\n4027|33|4088|22|\n",
+    "lastKnownWriteTime": 1637280431,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1637280431184,
+    "read_only": false,
+    "read_only_alternatives": []
+}

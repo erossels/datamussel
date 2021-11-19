@@ -1,0 +1,1303 @@
+---
+title: "DataMussel"
+author: 
+output: 
+  flexdashboard::flex_dashboard:
+    vertical_layout: scroll
+    orientation: columns
+    social: menu
+    source_code: embed
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(flexdashboard)
+library(reticulate)
+library(kableExtra)
+library(magrittr)
+library(dplyr)
+use_condaenv("r-reticulate")
+
+```
+
+<style>                     
+.navbar{
+  background-color:#092A30!important;
+  border-color:#092A30!important;
+}
+
+.li .a {
+  background-color:#092A30!important;
+  border-color:#092A30!important;
+}
+
+#dashboard-container {
+  background-color: #FFFFFF!important;
+  margin: 0!important;
+  padding: 0!important;
+}
+
+.tab-contaniner {
+  overflow: scroll!important;
+}
+
+
+</style>
+
+Ingreso MMPP
+=======================================================================
+
+Column {.tabset}
+-----------------------------------------------------------------------
+
+### MMPP
+
+```{python, echo=FALSE, include=FALSE, message=FALSE, warning=FALSE}
+import pandas as pd
+import seaborn as sns
+import numpy as np
+
+
+ingresos_mmpp = pd.read_csv("/Users/erossel/Dropbox/Salmon Derivates/Datamussel/Data mensual y semanal/Procesamiento/Procesos_Ingresos_2021.csv")
+
+#Parametros
+empresa = 'Manuelita'
+mes = 9
+
+# Kilos a toneladas
+ingresos_mmpp['Valor'] = [ingresos_mmpp.Valor.iloc[i]/1000 if ingresos_mmpp['Unidad de medida'].iloc[i] == 'Kilos' else ingresos_mmpp.Valor.iloc[i]  for i in ingresos_mmpp.index]
+ingresos_mmpp['Unidad de medida'] = ingresos_mmpp['Unidad de medida'].apply(lambda u: 'Ton' if u == 'Kilos' else u)
+
+# Agrupación indicadores
+
+dict_indicadores_tipo = {
+    'Ingreso Materia Bruta Prima Propia':'MP Bruta',
+    'Ingreso Materia Prima Neta o Pagada Propia':'MP Neta',
+    'Unidades por kilo mmpp propia*': "No aplica",
+    'Ingreso Materia Prima Bruta Terceros':'MP Bruta',
+    'Ingreso Materia Prima Neta o Pagada Terceros':'MP Neta',
+    'Unidades por kilo mmpp terceros*': "No aplica", 
+    'Ingreso Materia Prima Propia':'MP Bruta',
+    'Ingreso Materia Prima Neta Propia':'MP Neta',
+    'Ingreso Materia Prima Terceros':'MP Bruta',
+    'Ingreso Materia Prima Neta Terceros':'MP Neta',
+    'Ingreso Materia Prima Bruta Propia':'MP Bruta'
+}
+
+ingresos_mmpp['Tipo'] = ingresos_mmpp.Indicador.apply(lambda i: dict_indicadores_tipo[i])
+
+dict_indicadores_propiedad = {
+    'Ingreso Materia Bruta Prima Propia':'MPB Propia',
+    'Ingreso Materia Prima Neta o Pagada Propia':'MPN Propia',
+    'Unidades por kilo mmpp propia*': "No aplica",
+    'Ingreso Materia Prima Bruta Terceros':'MPB Terceros',
+    'Ingreso Materia Prima Neta o Pagada Terceros':'MPN Terceros',
+    'Unidades por kilo mmpp terceros*': "No aplica", 
+    'Ingreso Materia Prima Propia':'MPB Propia',
+    'Ingreso Materia Prima Neta Propia':'MPN Propia',
+    'Ingreso Materia Prima Terceros':'MPB Terceros',
+    'Ingreso Materia Prima Neta Terceros':'MPN Terceros',
+    'Ingreso Materia Prima Bruta Propia':'MPB Propia'
+}
+
+ingresos_mmpp['Propiedad'] = ingresos_mmpp.Indicador.apply(lambda i: dict_indicadores_propiedad[i])
+
+dict_meses = {
+    1:'Enero',
+    2:'Febrero',
+    3:'Marzo',
+    4:'Abril',
+    5:'Mayo',
+    6:'Junio',
+    7:'Julio',
+    8:'Agosto',
+    9:'Septiembre',
+    10:'Octubre',
+    11:'Noviembre',
+    12:'Diciembre'
+}
+
+pv = ingresos_mmpp[ingresos_mmpp.Empresa == empresa].pivot_table(index=['Tipo','Propiedad'], columns='Mes', values='Valor', aggfunc=sum)
+pv = pv[pv.index.get_level_values('Tipo').isin(['MP Bruta', 'MP Neta'])]
+total = pv.sum(axis=1).round(0)
+average = pv.mean(axis=1).round(0)
+pv[13] = total.copy()
+pv[14] = average.copy()
+
+pv2 = ingresos_mmpp[ingresos_mmpp.Empresa == empresa].pivot_table(index=['Tipo','Propiedad'], columns='Mes', values='Valor')
+pv2 = pv2.groupby(level=0).transform(lambda x: (x / x.sum()).round(2))*100
+pv2 = pv2[pv2.index.get_level_values('Tipo').isin(['MP Bruta', 'MP Neta'])]
+total2 = pv2.mean(axis=1).round(0)
+average2 = pv2.mean(axis=1).round(0)
+pv2[13] = total2
+pv2[14] = average2
+
+largo = len(pv2.columns)
+new_index = []
+for i in range(1, largo+1):
+    if i == largo - 1:
+        new_index.append(('Total','Ton'))
+        new_index.append(('Total','%'))
+    elif i == largo:
+        new_index.append(('Promedio','Ton'))
+        new_index.append(('Promedio','%'))
+    else: 
+        new_index.append((dict_meses[i],'Ton'))
+        new_index.append((dict_meses[i],'%'))
+
+pv3 = pd.concat([pv, pv2], axis=1).sort_index(level=0,axis=1)
+pv3.columns = pd.MultiIndex.from_tuples(new_index)
+
+pv_empresa = pd.concat([
+    d.append(d.sum().rename((k, 'Total')))
+    for k, d in pv3.groupby(level=0)
+]).append(pv3.sum().rename(('General', 'Total'))).round()
+
+largo = len(pv_empresa.columns)
+for i in range(1,largo+1,2):
+    if pv_empresa.iloc[0,i]+pv_empresa.iloc[1,i] != 100:
+        pv_empresa.iloc[:,[i-1, i]] = pv_empresa.iloc[:,[i,i-1]].copy() 
+  
+pv_empresa = pv_empresa.reset_index(level=None, drop=False)
+pv_empresa.Tipo = ["" if pv_empresa.Tipo.iloc[i] == pv_empresa.Tipo.iloc[i-1] else pv_empresa.Tipo.iloc[i] for i in range(len(pv_empresa.Tipo))]
+      
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+tabla <- py$pv_empresa
+
+cols <- ncol(tabla)
+
+tabla %>% kbl(caption= paste("Ingreso materia prima ",py$empresa), digits=1, format.args=list(big.mark = ',')) %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 12) %>% 
+  column_spec(1, bold = T, border_right = T, border_left = T) %>%
+  column_spec(2, bold = T, border_right = T) %>% 
+  column_spec(cols-4, border_right = T) %>% 
+  column_spec(cols-3, bold = T) %>%
+  column_spec(cols-2, bold = T, border_right = T) %>% 
+  column_spec(cols-1, bold = T) %>%
+  column_spec(cols, bold = T, border_right = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(3, bold = T, extra_css = "border-bottom: 1px solid") %>% 
+  row_spec(6, bold = T, extra_css = "border-bottom: 1px solid") %>% 
+  row_spec(7, bold = T, extra_css = "border-bottom: 1px solid")
+
+```
+
+```{python, echo=FALSE, include=FALSE, message=FALSE, warning=FALSE}
+pv = ingresos_mmpp.pivot_table(index=['Tipo','Propiedad'], columns='Mes', values='Valor', aggfunc=sum)
+pv = pv[pv.index.get_level_values('Tipo').isin(['MP Bruta', 'MP Neta'])]
+total = pv.sum(axis=1).round(0)
+average = pv.mean(axis=1).round(0)
+pv[13] = total.copy()
+pv[14] = average.copy()
+
+pv2 = ingresos_mmpp.pivot_table(index=['Tipo','Propiedad'], columns='Mes', values='Valor')
+pv2 = pv2.groupby(level=0).transform(lambda x: (x / x.sum()).round(2))*100
+pv2 = pv2[pv2.index.get_level_values('Tipo').isin(['MP Bruta', 'MP Neta'])]
+total2 = pv2.mean(axis=1).round(0)
+average2 = pv2.mean(axis=1).round(0)
+pv2[13] = total2
+pv2[14] = average2
+
+largo = len(pv2.columns)
+new_index = []
+for i in range(1, largo+1):
+    if i == largo - 1:
+        new_index.append(('Total','Ton'))
+        new_index.append(('Total','%'))
+    elif i == largo:
+        new_index.append(('Promedio','Ton'))
+        new_index.append(('Promedio','%'))
+    else: 
+        new_index.append((dict_meses[i],'Ton'))
+        new_index.append((dict_meses[i],'%'))
+
+pv3 = pd.concat([pv, pv2], axis=1).sort_index(level=0,axis=1)
+pv3.columns = pd.MultiIndex.from_tuples(new_index)
+
+largo = len(pv_todas.columns)
+for i in range(1,largo+1,2):
+    if pv_todas.iloc[0,i]+pv_todas.iloc[1,i] != 100:
+        pv_todas.iloc[:,[i-1, i]] = pv_todas.iloc[:,[i,i-1]].copy() 
+
+pv_todas = pd.concat([
+    d.append(d.sum().rename((k, 'Total')))
+    for k, d in pv3.groupby(level=0)
+]).append(pv3.sum().rename(('General', 'Total'))).round()
+
+pv_todas = pv_todas.reset_index(level=None, drop=False)
+pv_todas.Tipo = ["" if pv_todas.Tipo.iloc[i] == pv_todas.Tipo.iloc[i-1] else pv_todas.Tipo.iloc[i] for i in range(len(pv_todas.Tipo))]
+      
+pv_todas
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+tabla <- py$pv_todas
+
+cols <- ncol(tabla)
+
+tabla %>% kbl(caption= "Ingreso materia prima - Todas las industrias", digits=1, format.args=list(big.mark = ','))  %>%  
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 12) %>% 
+  column_spec(1, bold = T, border_right = T, border_left = T) %>%
+  column_spec(2, bold = T, border_right = T) %>% 
+  column_spec(cols-4, border_right = T) %>% 
+  column_spec(cols-3, bold = T) %>%
+  column_spec(cols-2, bold = T, border_right = T) %>% 
+  column_spec(cols-1, bold = T) %>%
+  column_spec(cols, bold = T, border_right = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(3, bold = T, extra_css = "border-bottom: 1px solid") %>% 
+  row_spec(6, bold = T, extra_css = "border-bottom: 1px solid") %>% 
+  row_spec(7, bold = T, extra_css = "border-bottom: 1px solid")
+
+```
+
+```{python, echo=FALSE, include=FALSE, message=FALSE, warning=FALSE}
+pv = ingresos_mmpp[ingresos_mmpp.Empresa != empresa].pivot_table(index=['Tipo','Propiedad'], columns='Mes', values='Valor', aggfunc=sum)
+pv = pv[pv.index.get_level_values('Tipo').isin(['MP Bruta', 'MP Neta'])]
+total = pv.sum(axis=1).round(0)
+average = pv.mean(axis=1).round(0)
+pv[13] = total.copy()
+pv[14] = average.copy()
+
+pv2 = ingresos_mmpp[ingresos_mmpp.Empresa != empresa].pivot_table(index=['Tipo','Propiedad'], columns='Mes', values='Valor', aggfunc=sum)
+pv2 = pv2.groupby(level=0).transform(lambda x: (x / x.sum()).round(2))*100
+pv2 = pv2[pv2.index.get_level_values('Tipo').isin(['MP Bruta', 'MP Neta'])]
+total2 = pv2.mean(axis=1).round(0)
+average2 = pv2.mean(axis=1).round(0)
+pv2[13] = total2
+pv2[14] = average2
+
+largo = len(pv2.columns)
+new_index = []
+for i in range(1, largo+1):
+    if i == largo - 1:
+        new_index.append(('Total','Ton'))
+        new_index.append(('Total','%'))
+    elif i == largo:
+        new_index.append(('Promedio','Ton'))
+        new_index.append(('Promedio','%'))
+    else: 
+        new_index.append((dict_meses[i],'Ton'))
+        new_index.append((dict_meses[i],'%'))
+
+pv3 = pd.concat([pv, pv2], axis=1).sort_index(level=0,axis=1)
+pv3.columns = pd.MultiIndex.from_tuples(new_index)
+pv3
+
+pv_otras = pd.concat([
+    d.append(d.sum().rename((k, 'Total')))
+    for k, d in pv3.groupby(level=0)
+]).append(pv3.sum().rename(('General', 'Total'))).round()
+
+largo = len(pv_otras.columns)
+for i in range(1,largo+1,2):
+    if pv_otras.iloc[0,i]+pv_otras.iloc[1,i] != 100:
+        pv_otras.iloc[:,[i-1, i]] = pv_otras.iloc[:,[i,i-1]].copy() 
+
+pv_otras = pv_otras.reset_index(level=None, drop=False)
+pv_otras.Tipo = ["" if pv_otras.Tipo.iloc[i] == pv_otras.Tipo.iloc[i-1] else pv_otras.Tipo.iloc[i] for i in range(len(pv_otras.Tipo))]
+      
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+tabla <- py$pv_otras
+
+cols <- ncol(tabla)
+
+tabla %>% 
+  kbl(caption= "Ingreso materia prima - Otras Industrias",digits=1, format.args=list(big.mark = ','))  %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 12) %>% 
+  column_spec(1, bold = T, border_right = T, border_left = T) %>%
+  column_spec(2, bold = T, border_right = T) %>% 
+  column_spec(cols-4, border_right = T) %>% 
+  column_spec(cols-3, bold = T) %>%
+  column_spec(cols-2, bold = T, border_right = T) %>% 
+  column_spec(cols-1, bold = T) %>%
+  column_spec(cols, bold = T, border_right = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(3, bold = T, extra_css = "border-bottom: 1px solid") %>% 
+  row_spec(6, bold = T, extra_css = "border-bottom: 1px solid") %>% 
+  row_spec(7, bold = T, extra_css = "border-bottom: 1px solid")
+
+```
+
+### Detalle Materia Prima
+
+<h3> Acumulado año actual </h3>
+
+```{python, echo=FALSE, include=FALSE, message=FALSE, warning=FALSE}
+# Acumulado año INDUSTRIA
+
+dict_propiedad = {
+ 'Ingreso Materia Bruta Prima Propia':'Materia Prima Propia',
+ 'Ingreso Materia Prima Neta o Pagada Propia':'Materia Prima Propia',
+ 'Unidades por kilo mmpp propia*':'Materia Prima Propia',
+ 'Ingreso Materia Prima Bruta Terceros':'Materia Prima Terceros',
+ 'Ingreso Materia Prima Neta o Pagada Terceros':'Materia Prima Terceros',
+ 'Unidades por kilo mmpp terceros*':'Materia Prima Terceros',
+ 'Ingreso Materia Prima Propia':'Materia Prima Propia',
+ 'Ingreso Materia Prima Neta Propia':'Materia Prima Propia',
+ 'Ingreso Materia Prima Terceros':'Materia Prima Terceros',
+ 'Ingreso Materia Prima Neta Terceros':'Materia Prima Terceros',
+ 'Ingreso Materia Prima Bruta Propia':'Materia Prima Propia',
+ '% Rechazo Materia Prima Propia':'Materia Prima Propia',
+ '% Rechazo Materia Prima Terceros':'Materia Prima Terceros',
+ '% Rechazo Materia Prima Total':'Total Materia Prima'
+}
+
+dict_indicadores_2 = {
+ 'Ingreso Materia Bruta Prima Propia':'Ingreso Materia Prima Bruta',
+ 'Ingreso Materia Prima Neta o Pagada Propia':'Ingreso Materia Prima Neta',
+ 'Unidades por kilo mmpp propia*':'Unidades por kilo',
+ 'Ingreso Materia Prima Bruta Terceros':'Ingreso Materia Prima Bruta',
+ 'Ingreso Materia Prima Neta o Pagada Terceros':'Ingreso Materia Prima Neta',
+ 'Unidades por kilo mmpp terceros*':'Unidades por kilo',
+ 'Ingreso Materia Prima Propia':'Ingreso Materia Prima Bruta',
+ 'Ingreso Materia Prima Neta Propia':'Ingreso Materia Prima Neta',
+ 'Ingreso Materia Prima Terceros':'Ingreso Materia Prima Bruta',
+ 'Ingreso Materia Prima Neta Terceros':'Ingreso Materia Prima Neta',
+ 'Ingreso Materia Prima Bruta Propia':'Ingreso Materia Prima Bruta',
+ '% Rechazo Materia Prima Propia':'% Rechazo MMPP',
+ '% Rechazo Materia Prima Terceros':'% Rechazo MMPP',
+ '% Rechazo Materia Prima Total':'% Rechazo MMPP'
+}
+
+#Lectura datos y creacion nuevas columnas
+df = ingresos_mmpp.copy()
+df['Indicadores'] = [dict_indicadores_2[df.Indicador.iloc[i]] for i in range(len(df.Indicador))]
+df['Propietario'] = [dict_propiedad[df.Indicador.iloc[i]] for i in range(len(df.Indicador))]
+
+# Creacion columnas con Total Materia Prima
+new_df = pd.DataFrame(columns = df.columns)
+for e in df.Empresa.unique():
+    for m in df.Mes.unique():
+        new_row = {
+            'Indicador':'Ingreso Materia Prima Bruta', 
+            'Valor': df[(df.Empresa == e) & (df.Mes == m) & (df.Tipo == 'MP Bruta')].Valor.sum(),
+            'Unidad de medida':'Ton', 
+            'Definición':'', 
+            'Mes':m, 
+            'Año':2021,
+            'Empresa':e,
+            'Tipo':'MP Bruta', 
+            'Propiedad':'', 
+            'Indicadores':'Ingreso Materia Prima Bruta', 
+            'Propietario':'Total Materia Prima'
+        }
+        new_df = new_df.append(new_row, ignore_index = True)
+        
+        new_row = {
+            'Indicador':'Ingreso Materia Prima Neta', 
+            'Valor': df[(df.Empresa == e) & (df.Mes == m) & (df.Tipo == 'MP Neta')].Valor.sum(),
+            'Unidad de medida':'Ton', 
+            'Definición':'', 
+            'Mes':m, 
+            'Año':2021,
+            'Empresa':e,
+            'Tipo':'MP Bruta', 
+            'Propiedad':'', 
+            'Indicadores':'Ingreso Materia Prima Neta', 
+            'Propietario':'Total Materia Prima'
+        }
+        new_df = new_df.append(new_row, ignore_index = True)
+
+df = df.append(new_df, ignore_index=True)
+df = df.groupby(['Propietario','Indicadores']).Valor.agg(['sum', np.mean], axis='columns')
+df = df.round(2)
+df.columns = ['Total', 'Promedio']
+
+# Promedio ponderado unidades por kilo
+for i, j in df.index:
+    df.loc[(i,'% Rechazo mmpp'), 'Total'] = (df.loc[(i,'Ingreso Materia Prima Bruta'), 'Total']-df.loc[(i,'Ingreso Materia Prima Neta'), 'Total'])*100/df.loc[(i,'Ingreso Materia Prima Bruta'), 'Total']
+    if i != 'Total Materia Prima':
+        df.loc[(i,'% MP Bruta Propia sobre Total MP Bruta'),'Total'] = df.loc[(i,'Ingreso Materia Prima Bruta'), 'Total']/df.loc[('Total Materia Prima','Ingreso Materia Prima Bruta'),'Total']*100
+    if (i == 'Materia Prima Propia') & (j=='Unidades por kilo'):
+        # Promedio ponderado unidades por kilo
+        df2 = ingresos_mmpp.copy()
+        df2['Indicadores'] = [dict_indicadores_2[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        df2['Propietario'] = [dict_propiedad[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        filtro = (df2.Indicadores == 'Ingreso Materia Prima Neta') | (df2.Indicadores=='Unidades por kilo')
+        df3 = df2[filtro].groupby(['Empresa','Mes','Propietario','Indicadores']).Valor.sum().unstack(level=-1).fillna(0)
+        df3_propia = df3.loc[idx[:,:,'Materia Prima Propia'],:]
+        uxk_propia = (df3_propia['Ingreso Materia Prima Neta']*df3_propia['Unidades por kilo']).sum()/df3_propia['Ingreso Materia Prima Neta'].sum()
+        df.loc[(i,j),'Total'] = uxk_propia    
+        
+    if (i == 'Materia Prima Terceros') & (j=='Unidades por kilo'):
+        # Promedio ponderado unidades por kilo
+        df2 = ingresos_mmpp.copy()
+        df2['Indicadores'] = [dict_indicadores_2[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        df2['Propietario'] = [dict_propiedad[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        filtro = (df2.Indicadores == 'Ingreso Materia Prima Neta') | (df2.Indicadores=='Unidades por kilo')
+        df3 = df2[filtro].groupby(['Empresa','Mes','Propietario','Indicadores']).Valor.sum().unstack(level=-1).fillna(0)
+        df3_terceros = df3.loc[idx[:,:,'Materia Prima Terceros'],:]
+        uxk_terceros = (df3_terceros['Ingreso Materia Prima Neta']*df3_terceros['Unidades por kilo']).sum()/df3_terceros['Ingreso Materia Prima Neta'].sum()
+        df.loc[(i,j),'Total'] = uxk_terceros
+
+df = df.round(2).sort_index(ascending = [True, False])
+
+#Corregir orden de filas
+try:
+  df = df.loc[[('Materia Prima Propia', 'Ingreso Materia Prima Bruta'),
+ ('Materia Prima Propia', 'Ingreso Materia Prima Neta'),
+ ('Materia Prima Propia', 'Unidades por kilo'),
+ ('Materia Prima Propia', '% Rechazo mmpp'),
+ ('Materia Prima Propia', '% MP Bruta Propia sobre Total MP Bruta'),
+ ('Materia Prima Terceros', 'Ingreso Materia Prima Bruta'),
+ ('Materia Prima Terceros', 'Ingreso Materia Prima Neta'),
+ ('Materia Prima Terceros', 'Unidades por kilo'),
+ ('Materia Prima Terceros', '% Rechazo mmpp'),
+ ('Materia Prima Terceros', '% MP Bruta Propia sobre Total MP Bruta'),
+ ('Total Materia Prima', 'Ingreso Materia Prima Bruta'),
+ ('Total Materia Prima', 'Ingreso Materia Prima Neta'),
+ ('Total Materia Prima', '% Rechazo mmpp'),
+ ],:].fillna(0)
+except:
+  df.fillna(0)
+  
+#Aplanar tabla para visualizar con R
+
+df_industrias = df.copy()
+
+df = df.reset_index(level=None, drop=False).fillna(0)
+df.Propietario = ["" if df.Propietario.iloc[i] == df.Propietario.iloc[i-1] else df.Propietario.iloc[i] for i in range(len(df.Propietario))]
+
+```
+
+```{python, echo=FALSE, include=FALSE, message=FALSE, warning=FALSE}
+idx = pd.IndexSlice
+# Nuevas columnas
+df = ingresos_mmpp[ingresos_mmpp.Empresa == empresa].copy()
+df['Indicadores'] = [dict_indicadores_2[df.Indicador.iloc[i]] for i in range(len(df.Indicador))]
+df['Propietario'] = [dict_propiedad[df.Indicador.iloc[i]] for i in range(len(df.Indicador))]
+
+# Añadir nuevas columnas para el total
+new_df = pd.DataFrame(columns = df.columns)
+
+for e in df.Empresa.unique():
+    for m in df.Mes.unique():
+        new_row = {
+            'Indicador':'Ingreso Materia Prima Bruta', 
+            'Valor': df[(df.Empresa == e) & (df.Mes == m) & (df.Tipo == 'MP Bruta')].Valor.sum(),
+            'Unidad de medida':'Ton', 
+            'Definición':'', 
+            'Mes':m, 
+            'Año':2021,
+            'Empresa':e,
+            'Tipo':'MP Bruta', 
+            'Propiedad':'', 
+            'Indicadores':'Ingreso Materia Prima Bruta', 
+            'Propietario':'Total Materia Prima'
+        }
+        new_df = new_df.append(new_row, ignore_index = True)
+        
+        new_row = {
+            'Indicador':'Ingreso Materia Prima Neta', 
+            'Valor': df[(df.Empresa == e) & (df.Mes == m) & (df.Tipo == 'MP Neta')].Valor.sum(),
+            'Unidad de medida':'Ton', 
+            'Definición':'', 
+            'Mes':m, 
+            'Año':2021,
+            'Empresa':e,
+            'Tipo':'MP Bruta', 
+            'Propiedad':'', 
+            'Indicadores':'Ingreso Materia Prima Neta', 
+            'Propietario':'Total Materia Prima'
+        }
+        new_df = new_df.append(new_row, ignore_index = True)
+        
+df = df.append(new_df, ignore_index=True)
+df = df.groupby(['Propietario','Indicadores']).Valor.agg(['sum', np.mean], axis='columns')
+df = df.round(2)
+df.columns = ['Total', 'Promedio']
+
+# Promedio ponderado unidades por kilo
+df2 = ingresos_mmpp[ingresos_mmpp.Empresa == empresa].copy()
+df2['Indicadores'] = [dict_indicadores_2[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+df2['Propietario'] = [dict_propiedad[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+filtro = (df2.Indicadores == 'Ingreso Materia Prima Neta') | (df2.Indicadores=='Unidades por kilo')
+
+df3 = df2[filtro].groupby(['Empresa','Mes','Propietario','Indicadores']).Valor.sum().unstack(level=-1).fillna(0)
+
+df3_propia = df3.loc[idx[:,:,'Materia Prima Propia'],:]
+uxk_propia = (df3_propia['Ingreso Materia Prima Neta']*df3_propia['Unidades por kilo']).sum()/df3_propia['Ingreso Materia Prima Neta'].sum()
+
+
+df3_terceros = df3.loc[idx[:,:,'Materia Prima Terceros'],:]
+uxk_terceros = (df3_terceros['Ingreso Materia Prima Neta']*df3_terceros['Unidades por kilo']).sum()/df3_terceros['Ingreso Materia Prima Neta'].sum()
+
+
+#Cambios en Unidades por Kilo y %MP Bruta
+
+for i, j in df.index:
+    df.loc[(i,'% Rechazo mmpp'), 'Total'] = (df.loc[(i,'Ingreso Materia Prima Bruta'), 'Total']-df.loc[(i,'Ingreso Materia Prima Neta'), 'Total'])*100/df.loc[(i,'Ingreso Materia Prima Bruta'), 'Total']
+    if i != 'Total Materia Prima':
+        df.loc[(i,'% MP Bruta Propia sobre Total MP Bruta'),'Total'] = df.loc[(i,'Ingreso Materia Prima Bruta'), 'Total']/df.loc[('Total Materia Prima','Ingreso Materia Prima Bruta'),'Total']*100
+    if (i == 'Materia Prima Propia') & (j=='Unidades por kilo'):
+        # Promedio ponderado unidades por kilo
+        df2 = ingresos_mmpp.copy()
+        df2['Indicadores'] = [dict_indicadores_2[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        df2['Propietario'] = [dict_propiedad[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        filtro = (df2.Indicadores == 'Ingreso Materia Prima Neta') | (df2.Indicadores=='Unidades por kilo')
+        df3 = df2[filtro].groupby(['Empresa','Mes','Propietario','Indicadores']).Valor.sum().unstack(level=-1).fillna(0)
+        df3_propia = df3.loc[idx[:,:,'Materia Prima Propia'],:]
+        uxk_propia = (df3_propia['Ingreso Materia Prima Neta']*df3_propia['Unidades por kilo']).sum()/df3_propia['Ingreso Materia Prima Neta'].sum()
+        df.loc[(i,j),'Total'] = uxk_propia    
+        
+    if (i == 'Materia Prima Terceros') & (j=='Unidades por kilo'):
+        # Promedio ponderado unidades por kilo
+        df2 = ingresos_mmpp.copy()
+        df2['Indicadores'] = [dict_indicadores_2[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        df2['Propietario'] = [dict_propiedad[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        filtro = (df2.Indicadores == 'Ingreso Materia Prima Neta') | (df2.Indicadores=='Unidades por kilo')
+        df3 = df2[filtro].groupby(['Empresa','Mes','Propietario','Indicadores']).Valor.sum().unstack(level=-1).fillna(0)
+        df3_terceros = df3.loc[idx[:,:,'Materia Prima Terceros'],:]
+        uxk_terceros = (df3_terceros['Ingreso Materia Prima Neta']*df3_terceros['Unidades por kilo']).sum()/df3_terceros['Ingreso Materia Prima Neta'].sum()
+        df.loc[(i,j),'Total'] = uxk_terceros
+
+df.round(2).sort_index(ascending = [True, False])
+
+try:
+  df = df.loc[[('Materia Prima Propia', 'Ingreso Materia Prima Bruta'),
+ ('Materia Prima Propia', 'Ingreso Materia Prima Neta'),
+ ('Materia Prima Propia', 'Unidades por kilo'),
+ ('Materia Prima Propia', '% Rechazo mmpp'),
+ ('Materia Prima Propia', '% MP Bruta Propia sobre Total MP Bruta'),
+ ('Materia Prima Terceros', 'Ingreso Materia Prima Bruta'),
+ ('Materia Prima Terceros', 'Ingreso Materia Prima Neta'),
+ ('Materia Prima Terceros', 'Unidades por kilo'),
+ ('Materia Prima Terceros', '% Rechazo mmpp'),
+ ('Materia Prima Terceros', '% MP Bruta Propia sobre Total MP Bruta'),
+ ('Total Materia Prima', 'Ingreso Materia Prima Bruta'),
+ ('Total Materia Prima', 'Ingreso Materia Prima Neta'),
+ ('Total Materia Prima', '% Rechazo mmpp'),
+ ],:].fillna("")
+
+except:
+  df.fillna(0)
+  
+df_empresa = df.copy()
+
+df = df.reset_index(level=None, drop=False).fillna(0)
+df.Propietario = ["" if df.Propietario.iloc[i] == df.Propietario.iloc[i-1] else df.Propietario.iloc[i] for i in range(len(df.Propietario))]
+
+
+```
+
+```{python, echo=FALSE, include=FALSE, message=FALSE, warning=FALSE}
+# Detalle acumulado otras empresas
+# Nuevas columnas
+df = ingresos_mmpp[ingresos_mmpp.Empresa != empresa].copy()
+df['Indicadores'] = [dict_indicadores_2[df.Indicador.iloc[i]] for i in range(len(df.Indicador))]
+df['Propietario'] = [dict_propiedad[df.Indicador.iloc[i]] for i in range(len(df.Indicador))]
+
+# Añadir nuevas columnas para el total
+new_df = pd.DataFrame(columns = df.columns)
+
+for e in df.Empresa.unique():
+    for m in df.Mes.unique():
+        new_row = {
+            'Indicador':'Ingreso Materia Prima Bruta', 
+            'Valor': df[(df.Empresa == e) & (df.Mes == m) & (df.Tipo == 'MP Bruta')].Valor.sum(),
+            'Unidad de medida':'Ton', 
+            'Definición':'', 
+            'Mes':m, 
+            'Año':2021,
+            'Empresa':e,
+            'Tipo':'MP Bruta', 
+            'Propiedad':'', 
+            'Indicadores':'Ingreso Materia Prima Bruta', 
+            'Propietario':'Total Materia Prima'
+        }
+        new_df = new_df.append(new_row, ignore_index = True)
+        
+        new_row = {
+            'Indicador':'Ingreso Materia Prima Neta', 
+            'Valor': df[(df.Empresa == e) & (df.Mes == m) & (df.Tipo == 'MP Neta')].Valor.sum(),
+            'Unidad de medida':'Ton', 
+            'Definición':'', 
+            'Mes':m, 
+            'Año':2021,
+            'Empresa':e,
+            'Tipo':'MP Bruta', 
+            'Propiedad':'', 
+            'Indicadores':'Ingreso Materia Prima Neta', 
+            'Propietario':'Total Materia Prima'
+        }
+        new_df = new_df.append(new_row, ignore_index = True)
+        
+df = df.append(new_df, ignore_index=True)
+df = df.groupby(['Propietario','Indicadores']).Valor.agg(['sum', np.mean], axis='columns')
+df = df.round(2)
+df.columns = ['Total', 'Promedio']
+
+# Promedio ponderado unidades por kilo
+df2 = ingresos_mmpp[ingresos_mmpp.Empresa != empresa].copy()
+df2['Indicadores'] = [dict_indicadores_2[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+df2['Propietario'] = [dict_propiedad[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+filtro = (df2.Indicadores == 'Ingreso Materia Prima Neta') | (df2.Indicadores=='Unidades por kilo')
+
+df3 = df2[filtro].groupby(['Empresa','Mes','Propietario','Indicadores']).Valor.sum().unstack(level=-1).fillna(0)
+
+df3_propia = df3.loc[idx[:,:,'Materia Prima Propia'],:]
+uxk_propia = (df3_propia['Ingreso Materia Prima Neta']*df3_propia['Unidades por kilo']).sum()/df3_propia['Ingreso Materia Prima Neta'].sum()
+
+
+df3_terceros = df3.loc[idx[:,:,'Materia Prima Terceros'],:]
+uxk_terceros = (df3_terceros['Ingreso Materia Prima Neta']*df3_terceros['Unidades por kilo']).sum()/df3_terceros['Ingreso Materia Prima Neta'].sum()
+
+
+#Cambios en Unidades por Kilo y %MP Bruta
+
+for i, j in df.index:
+    df.loc[(i,'% Rechazo mmpp'), 'Total'] = (df.loc[(i,'Ingreso Materia Prima Bruta'), 'Total']-df.loc[(i,'Ingreso Materia Prima Neta'), 'Total'])*100/df.loc[(i,'Ingreso Materia Prima Bruta'), 'Total']
+    if i != 'Total Materia Prima':
+        df.loc[(i,'% MP Bruta Propia sobre Total MP Bruta'),'Total'] = df.loc[(i,'Ingreso Materia Prima Bruta'), 'Total']/df.loc[('Total Materia Prima','Ingreso Materia Prima Bruta'),'Total']*100
+    if (i == 'Materia Prima Propia') & (j=='Unidades por kilo'):
+        # Promedio ponderado unidades por kilo
+        df2 = ingresos_mmpp.copy()
+        df2['Indicadores'] = [dict_indicadores_2[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        df2['Propietario'] = [dict_propiedad[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        filtro = (df2.Indicadores == 'Ingreso Materia Prima Neta') | (df2.Indicadores=='Unidades por kilo')
+        df3 = df2[filtro].groupby(['Empresa','Mes','Propietario','Indicadores']).Valor.sum().unstack(level=-1).fillna(0)
+        df3_propia = df3.loc[idx[:,:,'Materia Prima Propia'],:]
+        uxk_propia = (df3_propia['Ingreso Materia Prima Neta']*df3_propia['Unidades por kilo']).sum()/df3_propia['Ingreso Materia Prima Neta'].sum()
+        df.loc[(i,j),'Total'] = uxk_propia    
+        
+    if (i == 'Materia Prima Terceros') & (j=='Unidades por kilo'):
+        # Promedio ponderado unidades por kilo
+        df2 = ingresos_mmpp.copy()
+        df2['Indicadores'] = [dict_indicadores_2[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        df2['Propietario'] = [dict_propiedad[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        filtro = (df2.Indicadores == 'Ingreso Materia Prima Neta') | (df2.Indicadores=='Unidades por kilo')
+        df3 = df2[filtro].groupby(['Empresa','Mes','Propietario','Indicadores']).Valor.sum().unstack(level=-1).fillna(0)
+        df3_terceros = df3.loc[idx[:,:,'Materia Prima Terceros'],:]
+        uxk_terceros = (df3_terceros['Ingreso Materia Prima Neta']*df3_terceros['Unidades por kilo']).sum()/df3_terceros['Ingreso Materia Prima Neta'].sum()
+        df.loc[(i,j),'Total'] = uxk_terceros
+
+df.round(2).sort_index(ascending = [True, False])
+
+try:
+  df = df.loc[[('Materia Prima Propia', 'Ingreso Materia Prima Bruta'),
+ ('Materia Prima Propia', 'Ingreso Materia Prima Neta'),
+ ('Materia Prima Propia', 'Unidades por kilo'),
+ ('Materia Prima Propia', '% Rechazo mmpp'),
+ ('Materia Prima Propia', '% MP Bruta Propia sobre Total MP Bruta'),
+ ('Materia Prima Terceros', 'Ingreso Materia Prima Bruta'),
+ ('Materia Prima Terceros', 'Ingreso Materia Prima Neta'),
+ ('Materia Prima Terceros', 'Unidades por kilo'),
+ ('Materia Prima Terceros', '% Rechazo mmpp'),
+ ('Materia Prima Terceros', '% MP Bruta Propia sobre Total MP Bruta'),
+ ('Total Materia Prima', 'Ingreso Materia Prima Bruta'),
+ ('Total Materia Prima', 'Ingreso Materia Prima Neta'),
+ ('Total Materia Prima', '% Rechazo mmpp'),
+ ],:].fillna("")
+except:
+  df.fillna("")
+
+df.round(2)
+
+df_otras = df.copy()
+
+df = df.reset_index(level=None, drop=False).fillna(0)
+df.Propietario = ["" if df.Propietario.iloc[i] == df.Propietario.iloc[i-1] else df.Propietario.iloc[i] for i in range(len(df.Propietario))]
+
+```
+
+```{python, echo=FALSE, include=FALSE, message=FALSE, warning=FALSE}
+df_all = df_industrias.merge(df_empresa, how='outer', on=['Propietario','Indicadores'])
+df_all = df_all.merge(df_otras, how='outer',on=['Propietario','Indicadores'])
+df_all.sort_index(ascending = [True, False])
+
+try:
+  df_all = df_all.loc[[('Materia Prima Propia', 'Ingreso Materia Prima Bruta'),
+ ('Materia Prima Propia', 'Ingreso Materia Prima Neta'),
+ ('Materia Prima Propia', 'Unidades por kilo'),
+ ('Materia Prima Propia', '% Rechazo mmpp'),
+ ('Materia Prima Propia', '% MP Bruta Propia sobre Total MP Bruta'),
+ ('Materia Prima Terceros', 'Ingreso Materia Prima Bruta'),
+ ('Materia Prima Terceros', 'Ingreso Materia Prima Neta'),
+ ('Materia Prima Terceros', 'Unidades por kilo'),
+ ('Materia Prima Terceros', '% Rechazo mmpp'),
+ ('Materia Prima Terceros', '% MP Bruta Propia sobre Total MP Bruta'),
+ ('Total Materia Prima', 'Ingreso Materia Prima Bruta'),
+ ('Total Materia Prima', 'Ingreso Materia Prima Neta'),
+ ('Total Materia Prima', '% Rechazo mmpp'),
+ ],:].fillna("")
+except:
+  df_all.fillna(0)
+  
+  
+df_all = df_all.reset_index(level=None, drop=False).fillna(0)
+df_all.Propietario = ["" if df_all.Propietario.iloc[i] == df_all.Propietario.iloc[i-1] else df_all.Propietario.iloc[i] for i in range(len(df_all.Propietario))]
+
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+tabla_all <- py$df_all
+
+rows <- nrow(tabla_all)
+cols <- ncol(tabla_all)
+tabla_all %>% 
+  kbl(caption= "Detalle materia primas",digits=1, format.args=list(big.mark = ','),col.names = c('Propietario', 'Indicadores', "Total", "Promedio","Total", "Promedio","Total", "Promedio" ))  %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 12) %>% 
+  column_spec(1, bold = T, border_right = T, border_left = T) %>%
+  column_spec(2, bold = T, border_right = T) %>% 
+  column_spec(cols, border_right = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(rows, extra_css = "border-bottom: 1px solid" ) %>% 
+  add_header_above(c(" " = 2, "Industria" = 2, "Empresa" = 2, "Otras Industrias" = 2))
+```
+
+```{python, echo=FALSE, include=FALSE, message=FALSE, warning=FALSE}
+# Nuevas columnas
+df = ingresos_mmpp[ingresos_mmpp.Mes == mes].copy()
+df['Indicadores'] = [dict_indicadores_2[df.Indicador.iloc[i]] for i in range(len(df.Indicador))]
+df['Propietario'] = [dict_propiedad[df.Indicador.iloc[i]] for i in range(len(df.Indicador))]
+
+# Añadir nuevas columnas para el total
+new_df = pd.DataFrame(columns = df.columns)
+
+for e in df.Empresa.unique():
+    for m in df.Mes.unique():
+        new_row = {
+            'Indicador':'Ingreso Materia Prima Bruta', 
+            'Valor': df[(df.Empresa == e) & (df.Mes == m) & (df.Tipo == 'MP Bruta')].Valor.sum(),
+            'Unidad de medida':'Ton', 
+            'Definición':'', 
+            'Mes':m, 
+            'Año':2021,
+            'Empresa':e,
+            'Tipo':'MP Bruta', 
+            'Propiedad':'', 
+            'Indicadores':'Ingreso Materia Prima Bruta', 
+            'Propietario':'Total Materia Prima'
+        }
+        new_df = new_df.append(new_row, ignore_index = True)
+        
+        new_row = {
+            'Indicador':'Ingreso Materia Prima Neta', 
+            'Valor': df[(df.Empresa == e) & (df.Mes == m) & (df.Tipo == 'MP Neta')].Valor.sum(),
+            'Unidad de medida':'Ton', 
+            'Definición':'', 
+            'Mes':m, 
+            'Año':2021,
+            'Empresa':e,
+            'Tipo':'MP Bruta', 
+            'Propiedad':'', 
+            'Indicadores':'Ingreso Materia Prima Neta', 
+            'Propietario':'Total Materia Prima'
+        }
+        new_df = new_df.append(new_row, ignore_index = True)
+        
+df = df.append(new_df, ignore_index=True)
+df = df.groupby(['Propietario','Indicadores']).Valor.agg(['sum', np.mean], axis='columns')
+df = df.round(2)
+df.columns = ['Total', 'Promedio']
+
+# Promedio ponderado unidades por kilo
+df2 = ingresos_mmpp[ingresos_mmpp.Mes == mes].copy()
+df2['Indicadores'] = [dict_indicadores_2[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+df2['Propietario'] = [dict_propiedad[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+filtro = (df2.Indicadores == 'Ingreso Materia Prima Neta') | (df2.Indicadores=='Unidades por kilo')
+
+df3 = df2[filtro].groupby(['Empresa','Mes','Propietario','Indicadores']).Valor.sum().unstack(level=-1).fillna(0)
+
+df3_propia = df3.loc[idx[:,:,'Materia Prima Propia'],:]
+uxk_propia = (df3_propia['Ingreso Materia Prima Neta']*df3_propia['Unidades por kilo']).sum()/df3_propia['Ingreso Materia Prima Neta'].sum()
+
+
+df3_terceros = df3.loc[idx[:,:,'Materia Prima Terceros'],:]
+uxk_terceros = (df3_terceros['Ingreso Materia Prima Neta']*df3_terceros['Unidades por kilo']).sum()/df3_terceros['Ingreso Materia Prima Neta'].sum()
+
+
+#Cambios en Unidades por Kilo y %MP Bruta
+
+for i, j in df.index:
+    df.loc[(i,'% Rechazo mmpp'), 'Total'] = (df.loc[(i,'Ingreso Materia Prima Bruta'), 'Total']-df.loc[(i,'Ingreso Materia Prima Neta'), 'Total'])*100/df.loc[(i,'Ingreso Materia Prima Bruta'), 'Total']
+    if i != 'Total Materia Prima':
+        df.loc[(i,'% MP Bruta Propia sobre Total MP Bruta'),'Total'] = df.loc[(i,'Ingreso Materia Prima Bruta'), 'Total']/df.loc[('Total Materia Prima','Ingreso Materia Prima Bruta'),'Total']*100
+    if (i == 'Materia Prima Propia') & (j=='Unidades por kilo'):
+        # Promedio ponderado unidades por kilo
+        df2 = ingresos_mmpp.copy()
+        df2['Indicadores'] = [dict_indicadores_2[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        df2['Propietario'] = [dict_propiedad[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        filtro = (df2.Indicadores == 'Ingreso Materia Prima Neta') | (df2.Indicadores=='Unidades por kilo')
+        df3 = df2[filtro].groupby(['Empresa','Mes','Propietario','Indicadores']).Valor.sum().unstack(level=-1).fillna(0)
+        df3_propia = df3.loc[idx[:,:,'Materia Prima Propia'],:]
+        uxk_propia = (df3_propia['Ingreso Materia Prima Neta']*df3_propia['Unidades por kilo']).sum()/df3_propia['Ingreso Materia Prima Neta'].sum()
+        df.loc[(i,j),'Total'] = uxk_propia    
+        
+    if (i == 'Materia Prima Terceros') & (j=='Unidades por kilo'):
+        # Promedio ponderado unidades por kilo
+        df2 = ingresos_mmpp.copy()
+        df2['Indicadores'] = [dict_indicadores_2[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        df2['Propietario'] = [dict_propiedad[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        filtro = (df2.Indicadores == 'Ingreso Materia Prima Neta') | (df2.Indicadores=='Unidades por kilo')
+        df3 = df2[filtro].groupby(['Empresa','Mes','Propietario','Indicadores']).Valor.sum().unstack(level=-1).fillna(0)
+        df3_terceros = df3.loc[idx[:,:,'Materia Prima Terceros'],:]
+        uxk_terceros = (df3_terceros['Ingreso Materia Prima Neta']*df3_terceros['Unidades por kilo']).sum()/df3_terceros['Ingreso Materia Prima Neta'].sum()
+        df.loc[(i,j),'Total'] = uxk_terceros
+
+df.round(2).sort_index(ascending = [True, False])
+
+try:
+  df = df.loc[[('Materia Prima Propia', 'Ingreso Materia Prima Bruta'),
+ ('Materia Prima Propia', 'Ingreso Materia Prima Neta'),
+ ('Materia Prima Propia', 'Unidades por kilo'),
+ ('Materia Prima Propia', '% Rechazo mmpp'),
+ ('Materia Prima Propia', '% MP Bruta Propia sobre Total MP Bruta'),
+ ('Materia Prima Terceros', 'Ingreso Materia Prima Bruta'),
+ ('Materia Prima Terceros', 'Ingreso Materia Prima Neta'),
+ ('Materia Prima Terceros', 'Unidades por kilo'),
+ ('Materia Prima Terceros', '% Rechazo mmpp'),
+ ('Materia Prima Terceros', '% MP Bruta Propia sobre Total MP Bruta'),
+ ('Total Materia Prima', 'Ingreso Materia Prima Bruta'),
+ ('Total Materia Prima', 'Ingreso Materia Prima Neta'),
+ ('Total Materia Prima', '% Rechazo mmpp'),
+ ],:].fillna("")
+except:
+  df.fillna("")
+
+df_industrias_mes = df.copy()
+
+```
+
+```{python, echo=FALSE, include=FALSE, message=FALSE, warning=FALSE}
+# Nuevas columnas
+df = ingresos_mmpp[(ingresos_mmpp.Empresa == empresa) & (ingresos_mmpp.Mes == mes)].copy()
+df['Indicadores'] = [dict_indicadores_2[df.Indicador.iloc[i]] for i in range(len(df.Indicador))]
+df['Propietario'] = [dict_propiedad[df.Indicador.iloc[i]] for i in range(len(df.Indicador))]
+df.fillna(0)
+
+# Añadir nuevas columnas para el total
+new_df = pd.DataFrame(columns = df.columns)
+
+for e in df.Empresa.unique():
+    for m in df.Mes.unique():
+        new_row = {
+            'Indicador':'Ingreso Materia Prima Bruta', 
+            'Valor': df[(df.Empresa == e) & (df.Mes == m) & (df.Tipo == 'MP Bruta')].Valor.sum(),
+            'Unidad de medida':'Ton', 
+            'Definición':'', 
+            'Mes':m, 
+            'Año':2021,
+            'Empresa':e,
+            'Tipo':'MP Bruta', 
+            'Propiedad':'', 
+            'Indicadores':'Ingreso Materia Prima Bruta', 
+            'Propietario':'Total Materia Prima'
+        }
+        new_df = new_df.append(new_row, ignore_index = True)
+        
+        new_row = {
+            'Indicador':'Ingreso Materia Prima Neta', 
+            'Valor': df[(df.Empresa == e) & (df.Mes == m) & (df.Tipo == 'MP Neta')].Valor.sum(),
+            'Unidad de medida':'Ton', 
+            'Definición':'', 
+            'Mes':m, 
+            'Año':2021,
+            'Empresa':e,
+            'Tipo':'MP Bruta', 
+            'Propiedad':'', 
+            'Indicadores':'Ingreso Materia Prima Neta', 
+            'Propietario':'Total Materia Prima'
+        }
+        new_df = new_df.append(new_row, ignore_index = True)
+        
+df = df.append(new_df, ignore_index=True)
+df = df.groupby(['Propietario','Indicadores']).Valor.agg(['sum', np.mean], axis='columns')
+df = df.round(2)
+df.columns = ['Total', 'Promedio']
+
+# Promedio ponderado unidades por kilo
+df2 = ingresos_mmpp[(ingresos_mmpp.Empresa == empresa) & (ingresos_mmpp.Mes == mes)].copy()
+df2['Indicadores'] = [dict_indicadores_2[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+df2['Propietario'] = [dict_propiedad[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+filtro = (df2.Indicadores == 'Ingreso Materia Prima Neta') | (df2.Indicadores=='Unidades por kilo')
+
+df3 = df2[filtro].groupby(['Empresa','Mes','Propietario','Indicadores']).Valor.sum().unstack(level=-1).fillna(0)
+
+df3_propia = df3.loc[idx[:,:,'Materia Prima Propia'],:]
+uxk_propia = (df3_propia['Ingreso Materia Prima Neta']*df3_propia['Unidades por kilo']).sum()/df3_propia['Ingreso Materia Prima Neta'].sum()
+
+
+df3_terceros = df3.loc[idx[:,:,'Materia Prima Terceros'],:]
+uxk_terceros = (df3_terceros['Ingreso Materia Prima Neta']*df3_terceros['Unidades por kilo']).sum()/df3_terceros['Ingreso Materia Prima Neta'].sum()
+
+
+#Cambios en Unidades por Kilo y %MP Bruta
+
+for i, j in df.index:
+    df.loc[(i,'% Rechazo mmpp'), 'Total'] = (df.loc[(i,'Ingreso Materia Prima Bruta'), 'Total']-df.loc[(i,'Ingreso Materia Prima Neta'), 'Total'])*100/df.loc[(i,'Ingreso Materia Prima Bruta'), 'Total']
+    if i != 'Total Materia Prima':
+        df.loc[(i,'% MP Bruta Propia sobre Total MP Bruta'),'Total'] = df.loc[(i,'Ingreso Materia Prima Bruta'), 'Total']/df.loc[('Total Materia Prima','Ingreso Materia Prima Bruta'),'Total']*100
+    if (i == 'Materia Prima Propia') & (j=='Unidades por kilo'):
+        # Promedio ponderado unidades por kilo
+        df2 = ingresos_mmpp.copy()
+        df2['Indicadores'] = [dict_indicadores_2[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        df2['Propietario'] = [dict_propiedad[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        filtro = (df2.Indicadores == 'Ingreso Materia Prima Neta') | (df2.Indicadores=='Unidades por kilo')
+        df3 = df2[filtro].groupby(['Empresa','Mes','Propietario','Indicadores']).Valor.sum().unstack(level=-1).fillna(0)
+        df3_propia = df3.loc[idx[:,:,'Materia Prima Propia'],:]
+        uxk_propia = (df3_propia['Ingreso Materia Prima Neta']*df3_propia['Unidades por kilo']).sum()/df3_propia['Ingreso Materia Prima Neta'].sum()
+        df.loc[(i,j),'Total'] = uxk_propia    
+        
+    if (i == 'Materia Prima Terceros') & (j=='Unidades por kilo'):
+        # Promedio ponderado unidades por kilo
+        df2 = ingresos_mmpp.copy()
+        df2['Indicadores'] = [dict_indicadores_2[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        df2['Propietario'] = [dict_propiedad[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        filtro = (df2.Indicadores == 'Ingreso Materia Prima Neta') | (df2.Indicadores=='Unidades por kilo')
+        df3 = df2[filtro].groupby(['Empresa','Mes','Propietario','Indicadores']).Valor.sum().unstack(level=-1).fillna(0)
+        df3_terceros = df3.loc[idx[:,:,'Materia Prima Terceros'],:]
+        uxk_terceros = (df3_terceros['Ingreso Materia Prima Neta']*df3_terceros['Unidades por kilo']).sum()/df3_terceros['Ingreso Materia Prima Neta'].sum()
+        df.loc[(i,j),'Total'] = uxk_terceros
+
+df.round(2).sort_index(ascending = [True, False])
+
+try: 
+    df = df.loc[[('Materia Prima Propia', 'Ingreso Materia Prima Bruta'),
+     ('Materia Prima Propia', 'Ingreso Materia Prima Neta'),
+     ('Materia Prima Propia', 'Unidades por kilo'),
+     ('Materia Prima Propia', '% Rechazo mmpp'),
+     ('Materia Prima Propia', '% MP Bruta Propia sobre Total MP Bruta'),
+     ('Materia Prima Terceros', 'Ingreso Materia Prima Bruta'),
+     ('Materia Prima Terceros', 'Ingreso Materia Prima Neta'),
+     ('Materia Prima Terceros', 'Unidades por kilo'),
+     ('Materia Prima Terceros', '% Rechazo mmpp'),
+     ('Materia Prima Terceros', '% MP Bruta Propia sobre Total MP Bruta'),
+     ('Total Materia Prima', 'Ingreso Materia Prima Bruta'),
+     ('Total Materia Prima', 'Ingreso Materia Prima Neta'),
+     ('Total Materia Prima', '% Rechazo mmpp'),
+     ],:].fillna("")
+except:
+    print('')
+finally: 
+    df = df.round(2).sort_index(ascending = [True, False])
+    
+df_empresa_mes = df.copy()
+```
+
+```{python, echo=FALSE, include=FALSE, message=FALSE, warning=FALSE}
+
+# Nuevas columnas
+df = ingresos_mmpp[(ingresos_mmpp.Empresa != empresa) & (ingresos_mmpp.Mes == mes)].copy()
+df['Indicadores'] = [dict_indicadores_2[df.Indicador.iloc[i]] for i in range(len(df.Indicador))]
+df['Propietario'] = [dict_propiedad[df.Indicador.iloc[i]] for i in range(len(df.Indicador))]
+
+# Añadir nuevas columnas para el total
+new_df = pd.DataFrame(columns = df.columns)
+
+for e in df.Empresa.unique():
+    for m in df.Mes.unique():
+        new_row = {
+            'Indicador':'Ingreso Materia Prima Bruta', 
+            'Valor': df[(df.Empresa == e) & (df.Mes == m) & (df.Tipo == 'MP Bruta')].Valor.sum(),
+            'Unidad de medida':'Ton', 
+            'Definición':'', 
+            'Mes':m, 
+            'Año':2021,
+            'Empresa':e,
+            'Tipo':'MP Bruta', 
+            'Propiedad':'', 
+            'Indicadores':'Ingreso Materia Prima Bruta', 
+            'Propietario':'Total Materia Prima'
+        }
+        new_df = new_df.append(new_row, ignore_index = True)
+        
+        new_row = {
+            'Indicador':'Ingreso Materia Prima Neta', 
+            'Valor': df[(df.Empresa == e) & (df.Mes == m) & (df.Tipo == 'MP Neta')].Valor.sum(),
+            'Unidad de medida':'Ton', 
+            'Definición':'', 
+            'Mes':m, 
+            'Año':2021,
+            'Empresa':e,
+            'Tipo':'MP Bruta', 
+            'Propiedad':'', 
+            'Indicadores':'Ingreso Materia Prima Neta', 
+            'Propietario':'Total Materia Prima'
+        }
+        new_df = new_df.append(new_row, ignore_index = True)
+        
+df = df.append(new_df, ignore_index=True)
+df = df.groupby(['Propietario','Indicadores']).Valor.agg(['sum', np.mean], axis='columns')
+df = df.round(2)
+df.columns = ['Total', 'Promedio']
+
+# Promedio ponderado unidades por kilo
+df2 = ingresos_mmpp[(ingresos_mmpp.Empresa != empresa) & (ingresos_mmpp.Mes == mes)].copy()
+df2['Indicadores'] = [dict_indicadores_2[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+df2['Propietario'] = [dict_propiedad[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+filtro = (df2.Indicadores == 'Ingreso Materia Prima Neta') | (df2.Indicadores=='Unidades por kilo')
+
+df3 = df2[filtro].groupby(['Empresa','Mes','Propietario','Indicadores']).Valor.sum().unstack(level=-1).fillna(0)
+
+df3_propia = df3.loc[idx[:,:,'Materia Prima Propia'],:]
+uxk_propia = (df3_propia['Ingreso Materia Prima Neta']*df3_propia['Unidades por kilo']).sum()/df3_propia['Ingreso Materia Prima Neta'].sum()
+
+
+df3_terceros = df3.loc[idx[:,:,'Materia Prima Terceros'],:]
+uxk_terceros = (df3_terceros['Ingreso Materia Prima Neta']*df3_terceros['Unidades por kilo']).sum()/df3_terceros['Ingreso Materia Prima Neta'].sum()
+
+
+#Cambios en Unidades por Kilo y %MP Bruta
+
+for i, j in df.index:
+    df.loc[(i,'% Rechazo mmpp'), 'Total'] = (df.loc[(i,'Ingreso Materia Prima Bruta'), 'Total']-df.loc[(i,'Ingreso Materia Prima Neta'), 'Total'])*100/df.loc[(i,'Ingreso Materia Prima Bruta'), 'Total']
+    if i != 'Total Materia Prima':
+        df.loc[(i,'% MP Bruta Propia sobre Total MP Bruta'),'Total'] = df.loc[(i,'Ingreso Materia Prima Bruta'), 'Total']/df.loc[('Total Materia Prima','Ingreso Materia Prima Bruta'),'Total']*100
+    if (i == 'Materia Prima Propia') & (j=='Unidades por kilo'):
+        # Promedio ponderado unidades por kilo
+        df2 = ingresos_mmpp.copy()
+        df2['Indicadores'] = [dict_indicadores_2[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        df2['Propietario'] = [dict_propiedad[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        filtro = (df2.Indicadores == 'Ingreso Materia Prima Neta') | (df2.Indicadores=='Unidades por kilo')
+        df3 = df2[filtro].groupby(['Empresa','Mes','Propietario','Indicadores']).Valor.sum().unstack(level=-1).fillna(0)
+        df3_propia = df3.loc[idx[:,:,'Materia Prima Propia'],:]
+        uxk_propia = (df3_propia['Ingreso Materia Prima Neta']*df3_propia['Unidades por kilo']).sum()/df3_propia['Ingreso Materia Prima Neta'].sum()
+        df.loc[(i,j),'Total'] = uxk_propia    
+        
+    if (i == 'Materia Prima Terceros') & (j=='Unidades por kilo'):
+        # Promedio ponderado unidades por kilo
+        df2 = ingresos_mmpp.copy()
+        df2['Indicadores'] = [dict_indicadores_2[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        df2['Propietario'] = [dict_propiedad[df2.Indicador.iloc[i]] for i in range(len(df2.Indicador))]
+        filtro = (df2.Indicadores == 'Ingreso Materia Prima Neta') | (df2.Indicadores=='Unidades por kilo')
+        df3 = df2[filtro].groupby(['Empresa','Mes','Propietario','Indicadores']).Valor.sum().unstack(level=-1).fillna(0)
+        df3_terceros = df3.loc[idx[:,:,'Materia Prima Terceros'],:]
+        uxk_terceros = (df3_terceros['Ingreso Materia Prima Neta']*df3_terceros['Unidades por kilo']).sum()/df3_terceros['Ingreso Materia Prima Neta'].sum()
+        df.loc[(i,j),'Total'] = uxk_terceros
+
+df.round(2).sort_index(ascending = [True, False])
+
+try:
+  df = df.loc[[('Materia Prima Propia', 'Ingreso Materia Prima Bruta'),
+ ('Materia Prima Propia', 'Ingreso Materia Prima Neta'),
+ ('Materia Prima Propia', 'Unidades por kilo'),
+ ('Materia Prima Propia', '% Rechazo mmpp'),
+ ('Materia Prima Propia', '% MP Bruta Propia sobre Total MP Bruta'),
+ ('Materia Prima Terceros', 'Ingreso Materia Prima Bruta'),
+ ('Materia Prima Terceros', 'Ingreso Materia Prima Neta'),
+ ('Materia Prima Terceros', 'Unidades por kilo'),
+ ('Materia Prima Terceros', '% Rechazo mmpp'),
+ ('Materia Prima Terceros', '% MP Bruta Propia sobre Total MP Bruta'),
+ ('Total Materia Prima', 'Ingreso Materia Prima Bruta'),
+ ('Total Materia Prima', 'Ingreso Materia Prima Neta'),
+ ('Total Materia Prima', '% Rechazo mmpp'),
+ ],:].fillna("")
+except:
+  df.fillna("")
+
+df_otras_mes = df.copy()
+```
+
+```{python, echo=FALSE, include=FALSE, message=FALSE, warning=FALSE}
+df_all_mes = df_industrias_mes.merge(df_empresa_mes, how='outer', on=['Propietario','Indicadores'])
+df_all_mes = df_all_mes.merge(df_otras_mes, how='outer',on=['Propietario','Indicadores'])
+df_all_mes.sort_index(ascending = [True, False])
+
+try:
+  df_all_mes = df_all_mes.loc[[('Materia Prima Propia', 'Ingreso Materia Prima Bruta'),
+ ('Materia Prima Propia', 'Ingreso Materia Prima Neta'),
+ ('Materia Prima Propia', 'Unidades por kilo'),
+ ('Materia Prima Propia', '% Rechazo mmpp'),
+ ('Materia Prima Propia', '% MP Bruta Propia sobre Total MP Bruta'),
+ ('Materia Prima Terceros', 'Ingreso Materia Prima Bruta'),
+ ('Materia Prima Terceros', 'Ingreso Materia Prima Neta'),
+ ('Materia Prima Terceros', 'Unidades por kilo'),
+ ('Materia Prima Terceros', '% Rechazo mmpp'),
+ ('Materia Prima Terceros', '% MP Bruta Propia sobre Total MP Bruta'),
+ ('Total Materia Prima', 'Ingreso Materia Prima Bruta'),
+ ('Total Materia Prima', 'Ingreso Materia Prima Neta'),
+ ('Total Materia Prima', '% Rechazo mmpp'),
+ ],:].fillna("")
+except:
+  df_all_mes.fillna(0)
+  
+  
+df_all_mes = df_all_mes.reset_index(level=None, drop=False).fillna(0)
+df_all_mes.Propietario = ["" if df_all_mes.Propietario.iloc[i] == df_all_mes.Propietario.iloc[i-1] else df_all_mes.Propietario.iloc[i] for i in range(len(df_all_mes.Propietario))]
+
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+tabla_all_mes <- py$df_all_mes
+
+rows <- nrow(tabla_all_mes)
+cols <- ncol(tabla_all_mes)
+tabla_all_mes %>% 
+  kbl(caption= "Detalle materia primas - Mes actual",digits=1, format.args=list(big.mark = ','),col.names = c('Propietario', 'Indicadores', "Total", "Promedio","Total", "Promedio","Total", "Promedio" ))  %>%
+  kable_paper(bootstrap_options = "striped", full_width = F, position='left',font_size = 12) %>% 
+  column_spec(1, bold = T, border_right = T, border_left = T) %>%
+  column_spec(2, bold = T, border_right = T) %>% 
+  column_spec(cols, border_right = T) %>% 
+  row_spec(0, bold = T, color = "white", background = "#092A30" ) %>% 
+  row_spec(rows, extra_css = "border-bottom: 1px solid" ) %>% 
+  add_header_above(c(" " = 2, "Industria" = 2, "Empresa" = 2, "Otras Industrias" = 2))
+```
+
+### Materia prima por origen 
+
+```{python, echo=FALSE, message=FALSE, warning=FALSE}
+datos = ingresos_mmpp[(ingresos_mmpp.Tipo== 'MP Bruta')].copy()[['Empresa','Propiedad','Mes','Valor']]
+
+import plotly.express as px
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+
+datos_w=pd.pivot_table(datos, index='Mes', columns='Propiedad', values='Valor', aggfunc=np.sum)
+
+fig_industria = px.bar(datos_w, x=datos_w.index,
+            y=['MPB Propia','MPB Terceros'], title="Indicador Materia Prima Bruta por origen",
+            labels={'Mes':'Mes','value':'Ton','variable':'Origen'},
+            color_discrete_map={"MPB Propia": "#00609C", "MPB Terceros": "#F4D19F"},
+            template="simple_white",
+            width=700, 
+            height=500,
+            )
+
+fig_industria.show()
+
+```
+
+```{python, echo=FALSE, message=FALSE, warning=FALSE, fig.width=5, fig.height=5}
+import plotly.express as px
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+
+datos_w=pd.pivot_table(datos[datos.Empresa == empresa], index='Mes', columns='Propiedad', values='Valor', aggfunc=np.sum)
+
+fig_industria2 = px.bar(datos_w, x=datos_w.index,
+            y=['MPB Propia','MPB Terceros'], title="Indicador Materia Prima Bruta por origen "+empresa,
+            labels={'Mes':'Mes','value':'Ton','variable':'Origen'},
+            color_discrete_map={"MPB Propia": "#C45130", "MPB Terceros": "#FFAA61"},
+            template="simple_white",
+            width=700, 
+            height=500)
+
+fig_industria2.show()
+```
+
+### Materia prima bruta por origen 
+
+```{python, echo=FALSE, message=FALSE, warning=FALSE, fig.width=5, fig.height=5}
+datos = ingresos_mmpp.copy()
+datos['Indicadores'] = [dict_indicadores_2[datos.Indicador.iloc[i]] for i in range(len(datos.Indicador))]
+datos['Propietario'] = [dict_propiedad[datos.Indicador.iloc[i]] for i in range(len(datos.Indicador))]
+
+datos = datos.drop_duplicates(subset=['Indicador','Valor','Mes','Año','Empresa'])
+
+
+import plotly.express as px
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+
+datos_w = datos[(datos.Empresa == empresa) & (datos.Indicadores == 'Unidades por kilo')].groupby(['Mes','Propietario']).Valor.sum().unstack()
+datos_w = datos_w.drop_duplicates()
+
+fig_industria = px.bar(datos_w, x=datos_w.index,
+            y=['Materia Prima Propia','Materia Prima Terceros'], title="Indicador Materia Prima Bruta por origen "+empresa,
+            labels={'Mes':'Mes','value':'Unidades por kilo','variable':'Origen'},
+            color_discrete_map={"Materia Prima Propia": "#C45130", "Materia Prima Terceros": "#FFAA61"},
+            template="simple_white",
+            width=700, 
+            height=500)
+
+fig_industria.show()
+```
+
+```{python, echo=FALSE, message=FALSE, warning=FALSE}
+#Filtrar data
+datos2 = datos[datos.Indicadores != 'Ingreso Materia Prima Bruta']
+datos2 = pd.pivot_table(datos2, index=['Mes','Empresa'], columns=['Propietario','Indicadores'], values='Valor').fillna(0)
+
+df_unidades = pd.DataFrame(columns = ['Mes','Unidades por kilo Propia', 'Unidades por kilo Terceros'])
+
+for i,j in datos2.index:
+    df_aux = datos2.loc[idx[i,:],:]['Materia Prima Propia']
+    df_auxa = datos2.loc[idx[i,:],:]['Materia Prima Terceros']
+    new_row = {
+        'Mes':i,
+        'Unidades por kilo Propia': (df_aux['Ingreso Materia Prima Neta']*df_aux['Unidades por kilo']).sum()/df_aux['Ingreso Materia Prima Neta'].sum(),
+        'Unidades por kilo Terceros': (df_auxa['Ingreso Materia Prima Neta']*df_auxa['Unidades por kilo']).sum()/df_auxa['Ingreso Materia Prima Neta'].sum()
+    }
+    df_unidades = df_unidades.append(new_row, ignore_index = True)
+    
+df_unidades = df_unidades.drop_duplicates()
+fig_industria = px.bar(df_unidades, x='Mes',
+            y=['Unidades por kilo Propia','Unidades por kilo Terceros'], title="Unidades por kilo ",
+            labels={'Mes':'Mes','value':'Unidades por kilo','variable':'Origen'},
+            color_discrete_map={"Unidades por kilo Propia": "#00609C", "Unidades por kilo Terceros": "#F4D19F"},
+            template="simple_white",
+            width=700, 
+            height=500)
+fig_industria.show()
+
+```
+
+### Rechazo
+
+```{python, echo=FALSE, message=FALSE, warning=FALSE, fig.width=5, fig.height=5}
+#Rechazo por origen
+datos = ingresos_mmpp.copy()
+datos['Indicadores'] = [dict_indicadores_2[datos.Indicador.iloc[i]] for i in range(len(datos.Indicador))]
+datos['Propietario'] = [dict_propiedad[datos.Indicador.iloc[i]] for i in range(len(datos.Indicador))]
+datos = datos.drop_duplicates(subset=['Indicador','Valor','Mes','Año','Empresa'])
+
+datos = pd.pivot_table(datos[datos.Indicadores != 'Unidades por kilo'], index=['Mes'], columns=['Propietario','Indicadores'], values='Valor')
+for i in datos.index:
+    datos.loc[i,('Materia Prima Propia','% Rechazo mmpp')] = (datos.loc[i,('Materia Prima Propia','Ingreso Materia Prima Bruta')] - datos.loc[i,('Materia Prima Propia','Ingreso Materia Prima Neta')]) /datos.loc[i,('Materia Prima Propia','Ingreso Materia Prima Bruta')]*100
+    datos.loc[i,('Materia Prima Terceros','% Rechazo mmpp')] = (datos.loc[i,('Materia Prima Terceros','Ingreso Materia Prima Bruta')] - datos.loc[i,('Materia Prima Terceros','Ingreso Materia Prima Neta')]) /datos.loc[i,('Materia Prima Propia','Ingreso Materia Prima Bruta')]*100
+
+datos = datos.loc[idx[:],idx[:,'% Rechazo mmpp']]
+datos.columns = ['% Rechazo mmpp Propia','% Rechazo mmpp Terceros']
+
+import plotly.express as px
+fig = px.line(datos, x=datos.index, y=['% Rechazo mmpp Propia','% Rechazo mmpp Terceros'], markers=True,
+                title="Porcentaje de rechazo por origen",
+                labels={'Mes':'Mes','value':'% Rechazo MMPP','variable':'Origen'},
+                color_discrete_map={'% Rechazo mmpp Propia': "#00609C", '% Rechazo mmpp Terceros': "#F4D19F"},
+                template="simple_white",
+                width=1000, 
+                height=500,)
+fig.show()
+
+```
+
+```{python, echo=FALSE, message=FALSE, warning=FALSE, fig.width=5, fig.height=5}
+# rechazo por origen empresa 
+
+datos = ingresos_mmpp[ingresos_mmpp.Empresa == empresa].copy()
+datos['Indicadores'] = [dict_indicadores_2[datos.Indicador.iloc[i]] for i in range(len(datos.Indicador))]
+datos['Propietario'] = [dict_propiedad[datos.Indicador.iloc[i]] for i in range(len(datos.Indicador))]
+datos = datos.drop_duplicates(subset=['Indicador','Valor','Mes','Año','Empresa'])
+
+datos = pd.pivot_table(datos[datos.Indicadores != 'Unidades por kilo'], index=['Mes'], columns=['Propietario','Indicadores'], values='Valor')
+for i in datos.index:
+    datos.loc[i,('Materia Prima Propia','% Rechazo mmpp')] = (datos.loc[i,('Materia Prima Propia','Ingreso Materia Prima Bruta')] - datos.loc[i,('Materia Prima Propia','Ingreso Materia Prima Neta')]) /datos.loc[i,('Materia Prima Propia','Ingreso Materia Prima Bruta')]*100
+    datos.loc[i,('Materia Prima Terceros','% Rechazo mmpp')] = (datos.loc[i,('Materia Prima Terceros','Ingreso Materia Prima Bruta')] - datos.loc[i,('Materia Prima Terceros','Ingreso Materia Prima Neta')]) /datos.loc[i,('Materia Prima Propia','Ingreso Materia Prima Bruta')]*100
+
+datos = datos.loc[idx[:],idx[:,'% Rechazo mmpp']]
+datos.columns = ['% Rechazo mmpp Propia','% Rechazo mmpp Terceros']
+
+import plotly.express as px
+fig = px.line(datos, x=datos.index, y=['% Rechazo mmpp Propia','% Rechazo mmpp Terceros'], markers=True,
+                title="Porcentaje de rechazo por origen "+empresa,
+                labels={'Mes':'Mes','value':'% Rechazo MMPP','variable':'Origen'},
+                color_discrete_map={'% Rechazo mmpp Propia': "#00609C", '% Rechazo mmpp Terceros': "#F4D19F"},
+                template="simple_white",
+                width=1000, 
+                height=500,)
+fig.show()
+
+```
+
+Dotación {.tabset}
+=======================================================================
+
+
+Productos {.tabset}
+=======================================================================

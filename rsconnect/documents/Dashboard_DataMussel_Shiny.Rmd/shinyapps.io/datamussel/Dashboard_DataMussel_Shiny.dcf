@@ -1,0 +1,13 @@
+name: Dashboard_DataMussel_Shiny
+title: Dashboard_DataMussel_Shiny
+username:
+account: datamussel
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5132907
+bundleId: 5268628
+url: https://datamussel.shinyapps.io/Dashboard_DataMussel_Shiny/
+when: 1637281427.21313
+lastSyncTime: 1637281427.21313
+asMultiple: TRUE
+asStatic: FALSE

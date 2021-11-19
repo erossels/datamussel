@@ -1,0 +1,195 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+  ignorenonframetext,
+]{beamer}
+\title{Reporte\_DataMussel}
+\author{}
+\date{\vspace{-2.5em}11/9/2021}
+
+\usepackage{pgfpages}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+% Prevent slide breaks in the middle of a paragraph
+\widowpenalties 1 10000
+\raggedbottom
+\setbeamertemplate{part page}{
+  \centering
+  \begin{beamercolorbox}[sep=16pt,center]{part title}
+    \usebeamerfont{part title}\insertpart\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{section page}{
+  \centering
+  \begin{beamercolorbox}[sep=12pt,center]{part title}
+    \usebeamerfont{section title}\insertsection\par
+  \end{beamercolorbox}
+}
+\setbeamertemplate{subsection page}{
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center]{part title}
+    \usebeamerfont{subsection title}\insertsubsection\par
+  \end{beamercolorbox}
+}
+\AtBeginPart{
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \frame{\subsectionpage}
+}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usetheme[]{Antibes}
+\usefonttheme{structurebold}
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Reporte\_DataMussel},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\newif\ifbibliography
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\begin{document}
+\frame{\titlepage}
+
+\begin{frame}{Indicadores Materia Prima.}
+\protect\hypertarget{indicadores-materia-prima.}{}
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-2}Ingreso materia prima  Manuelita}
+\centering
+\begin{tabular}[t]{|>{}c||>{}c||c|c|c|c|c|c|c|c|c|c|c|c|c|>{}c||>{}c|>{}c||>{}c|>{}c|}
+\hline
+\cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Tipo          }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Propiedad     }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Ene        Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{           %  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Feb        Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{           %  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Mar        Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{           %  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Abr        Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{           %  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{May        Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{           %  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Jun        Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{           %  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Jul        Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{           %  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Total      Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{           %  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Promedio   Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{           %  }}}\\
+\hline
+\textbf{MP Bruta} & \textbf{MPB Propia} & 1,812 & 59 & 2,083 & 68 & 3,114 & 82 & 1,964 & 61 & 2,117 & 63 & 1,591 & 57 & 380 & 79 & \textbf{13,062} & \textbf{67} & \textbf{1,866} & \textbf{67}\\
+\hline
+\textbf{} & \textbf{MPB Terceros} & 1,261 & 41 & 997 & 32 & 685 & 18 & 1,253 & 39 & 1,238 & 37 & 1,196 & 43 & 102 & 21 & \textbf{6,732} & \textbf{33} & \textbf{962} & \textbf{33}\\
+\hline
+\textbf{\textbf{}} & \textbf{\textbf{Total}} & \textbf{3,074} & \textbf{100} & \textbf{3,080} & \textbf{100} & \textbf{3,799} & \textbf{100} & \textbf{3,217} & \textbf{100} & \textbf{3,355} & \textbf{100} & \textbf{2,787} & \textbf{100} & \textbf{483} & \textbf{100} & \textbf{\textbf{19,794}} & \textbf{\textbf{100}} & \textbf{\textbf{2,828}} & \textbf{\textbf{100}}\\
+\hline
+\textbf{MP Neta} & \textbf{MPN Propia} & 1,620 & 59 & 1,897 & 68 & 2,781 & 82 & 1,727 & 61 & 1,797 & 64 & 1,348 & 57 & 333 & 79 & \textbf{11,502} & \textbf{67} & \textbf{1,643} & \textbf{67}\\
+\hline
+\textbf{} & \textbf{MPN Terceros} & 1,123 & 41 & 885 & 32 & 618 & 18 & 1,084 & 39 & 1,016 & 36 & 1,022 & 43 & 88 & 21 & \textbf{5,837} & \textbf{33} & \textbf{834} & \textbf{33}\\
+\hline
+\textbf{\textbf{}} & \textbf{\textbf{Total}} & \textbf{2,743} & \textbf{100} & \textbf{2,782} & \textbf{100} & \textbf{3,399} & \textbf{100} & \textbf{2,811} & \textbf{100} & \textbf{2,813} & \textbf{100} & \textbf{2,370} & \textbf{100} & \textbf{421} & \textbf{100} & \textbf{\textbf{17,339}} & \textbf{\textbf{100}} & \textbf{\textbf{2,477}} & \textbf{\textbf{100}}\\
+\hline
+\textbf{\textbf{General}} & \textbf{\textbf{Total}} & \textbf{5,817} & \textbf{200} & \textbf{5,862} & \textbf{200} & \textbf{7,198} & \textbf{200} & \textbf{6,028} & \textbf{200} & \textbf{6,168} & \textbf{200} & \textbf{5,157} & \textbf{200} & \textbf{904} & \textbf{200} & \textbf{\textbf{37,133}} & \textbf{\textbf{200}} & \textbf{\textbf{5,305}} & \textbf{\textbf{200}}\\
+\hline
+\end{tabular}
+\end{table}
+\end{frame}
+
+\begin{frame}{Indicadores Materia Prima.}
+\protect\hypertarget{indicadores-materia-prima.-1}{}
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-3}Ingreso materia prima - Todas las industrias}
+\centering
+\begin{tabular}[t]{|>{}c||>{}c||c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|>{}c||>{}c|>{}c||>{}c|>{}c|}
+\hline
+\cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Tipo           }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Propiedad      }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Ene         Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{            %  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Feb         Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{            %  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Mar         Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{            %  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Abr         Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{            %  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{May         Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{            %  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Jun         Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{            %  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Jul         Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{            %  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Ago         Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{            %  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Sep         Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{            %  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Total       Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{            %  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Promedio    Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{            %  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{N Empresas     }}}\\
+\hline
+\textbf{MP Bruta} & \textbf{MPB Propia} & 14,590 & 53 & 17,519 & 60 & 18,839 & 62 & 13,147 & 54 & 17,059 & 59 & 13,634 & 50 & 9,032 & 38 & 4,707 & 29 & 1,426 & 46 & 109,954 & \textbf{50} & \textbf{12,217} & \textbf{50} & \textbf{7}\\
+\hline
+\textbf{} & \textbf{MPB Terceros} & 12,943 & 47 & 11,613 & 40 & 11,740 & 38 & 11,199 & 46 & 11,812 & 41 & 13,690 & 50 & 14,830 & 62 & 11,770 & 71 & 1,648 & 54 & 101,245 & \textbf{50} & \textbf{11,249} & \textbf{50} & \textbf{7}\\
+\hline
+\textbf{\textbf{}} & \textbf{\textbf{Total}} & \textbf{27,533} & \textbf{100} & \textbf{29,132} & \textbf{100} & \textbf{30,578} & \textbf{100} & \textbf{24,346} & \textbf{100} & \textbf{28,871} & \textbf{100} & \textbf{27,325} & \textbf{100} & \textbf{23,862} & \textbf{100} & \textbf{16,477} & \textbf{100} & \textbf{3,074} & \textbf{100} & \textbf{211,199} & \textbf{\textbf{100}} & \textbf{\textbf{23,466}} & \textbf{\textbf{100}} & \textbf{\textbf{14}}\\
+\hline
+\textbf{MP Neta} & \textbf{MPN Propia} & 12,723 & 54 & 14,531 & 60 & 18,829 & 65 & 13,876 & 59 & 18,182 & 64 & 14,770 & 56 & 10,870 & 46 & 4,052 & 29 & 1,214 & 46 & 109,049 & \textbf{53} & \textbf{12,117} & \textbf{53} & \textbf{7}\\
+\hline
+\textbf{} & \textbf{MPN Terceros} & 10,977 & 46 & 9,822 & 40 & 10,188 & 35 & 9,677 & 41 & 10,223 & 36 & 11,561 & 44 & 12,568 & 54 & 9,815 & 71 & 1,398 & 54 & 86,229 & \textbf{47} & \textbf{9,581} & \textbf{47} & \textbf{7}\\
+\hline
+\textbf{\textbf{}} & \textbf{\textbf{Total}} & \textbf{23,700} & \textbf{100} & \textbf{24,353} & \textbf{100} & \textbf{29,017} & \textbf{100} & \textbf{23,554} & \textbf{100} & \textbf{28,405} & \textbf{100} & \textbf{26,331} & \textbf{100} & \textbf{23,438} & \textbf{100} & \textbf{13,867} & \textbf{100} & \textbf{2,612} & \textbf{100} & \textbf{195,278} & \textbf{\textbf{100}} & \textbf{\textbf{21,698}} & \textbf{\textbf{100}} & \textbf{\textbf{14}}\\
+\hline
+\textbf{\textbf{General}} & \textbf{\textbf{Total}} & \textbf{51,234} & \textbf{200} & \textbf{53,485} & \textbf{200} & \textbf{59,596} & \textbf{200} & \textbf{47,900} & \textbf{200} & \textbf{57,276} & \textbf{200} & \textbf{53,655} & \textbf{200} & \textbf{47,300} & \textbf{200} & \textbf{30,344} & \textbf{200} & \textbf{5,686} & \textbf{200} & \textbf{406,477} & \textbf{\textbf{200}} & \textbf{\textbf{45,164}} & \textbf{\textbf{200}} & \textbf{\textbf{28}}\\
+\hline
+\end{tabular}
+\end{table}
+\end{frame}
+
+\begin{frame}{Indicadores Materia Prima.}
+\protect\hypertarget{indicadores-materia-prima.-2}{}
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-4}Ingreso materia prima - Otras Industrias}
+\centering
+\begin{tabular}[t]{|>{}c||>{}c||c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|>{}c||>{}c|>{}c||>{}c|>{}c|}
+\hline
+\cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Tipo           }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Propiedad      }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Ene         Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{            \%  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Feb         Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{            \%  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Mar         Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{            \%  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Abr         Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{            \%  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{May         Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{            \%  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Jun         Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{            \%  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Jul         Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{            \%  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Ago         Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{            \%  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Sep         Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{            \%  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Total       Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{            \%  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{Promedio    Ton}}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{            \%  }}} & \cellcolor[HTML]{092A30}{\textcolor{white}{\textbf{N Empresas     }}}\\
+\hline
+\textbf{MP Bruta} & \textbf{MPB Propia} & 12,778 & 52 & 15,436 & 59 & 15,725 & 59 & 13,147 & 54 & 15,095 & 59 & 11,517 & 48 & 9,032 & 38 & 3,116 & 23 & 1,046 & 40 & 96,891 & \textbf{48} & \textbf{10,766} & \textbf{48} & \textbf{7}\\
+\hline
+\textbf{} & \textbf{MPB Terceros} & 11,682 & 48 & 10,616 & 41 & 11,055 & 41 & 11,199 & 46 & 10,559 & 41 & 12,452 & 52 & 14,830 & 62 & 10,574 & 77 & 1,545 & 60 & 94,513 & \textbf{52} & \textbf{10,501} & \textbf{52} & \textbf{7}\\
+\hline
+\textbf{\textbf{}} & \textbf{\textbf{Total}} & \textbf{24,460} & \textbf{100} & \textbf{26,052} & \textbf{100} & \textbf{26,780} & \textbf{100} & \textbf{24,346} & \textbf{100} & \textbf{25,654} & \textbf{100} & \textbf{23,970} & \textbf{100} & \textbf{23,862} & \textbf{100} & \textbf{13,690} & \textbf{100} & \textbf{2,591} & \textbf{100} & \textbf{191,404} & \textbf{\textbf{100}} & \textbf{\textbf{21,267}} & \textbf{\textbf{100}} & \textbf{\textbf{14}}\\
+\hline
+\textbf{MP Neta} & \textbf{MPN Propia} & 11,103 & 53 & 12,635 & 59 & 16,049 & 63 & 13,876 & 59 & 16,455 & 64 & 12,973 & 55 & 10,870 & 46 & 2,704 & 24 & 881 & 40 & 97,547 & \textbf{51} & \textbf{10,839} & \textbf{51} & \textbf{7}\\
+\hline
+\textbf{} & \textbf{MPN Terceros} & 9,854 & 47 & 8,936 & 41 & 9,570 & 37 & 9,677 & 41 & 9,139 & 36 & 10,544 & 45 & 12,568 & 54 & 8,793 & 76 & 1,310 & 60 & 80,391 & \textbf{49} & \textbf{8,932} & \textbf{49} & \textbf{7}\\
+\hline
+\textbf{\textbf{}} & \textbf{\textbf{Total}} & \textbf{20,957} & \textbf{100} & \textbf{21,571} & \textbf{100} & \textbf{25,619} & \textbf{100} & \textbf{23,554} & \textbf{100} & \textbf{25,594} & \textbf{100} & \textbf{23,518} & \textbf{100} & \textbf{23,438} & \textbf{100} & \textbf{11,497} & \textbf{100} & \textbf{2,191} & \textbf{100} & \textbf{177,938} & \textbf{\textbf{100}} & \textbf{\textbf{19,771}} & \textbf{\textbf{100}} & \textbf{\textbf{14}}\\
+\hline
+\textbf{\textbf{General}} & \textbf{\textbf{Total}} & \textbf{45,416} & \textbf{200} & \textbf{47,623} & \textbf{200} & \textbf{52,398} & \textbf{200} & \textbf{47,900} & \textbf{200} & \textbf{51,248} & \textbf{200} & \textbf{47,487} & \textbf{200} & \textbf{47,300} & \textbf{200} & \textbf{25,186} & \textbf{200} & \textbf{4,783} & \textbf{200} & \textbf{369,342} & \textbf{\textbf{200}} & \textbf{\textbf{41,038}} & \textbf{\textbf{200}} & \textbf{\textbf{28}}\\
+\hline
+\end{tabular}
+\end{table}
+\end{frame}
+
+\begin{frame}{R Markdown}
+\protect\hypertarget{r-markdown}{}
+This is an R Markdown presentation. Markdown is a simple formatting
+syntax for authoring HTML, PDF, and MS Word documents. For more details
+on using R Markdown see \url{http://rmarkdown.rstudio.com}.
+
+When you click the \textbf{Knit} button a document will be generated
+that includes both content as well as the output of any embedded R code
+chunks within the document.
+\end{frame}
+
+\end{document}

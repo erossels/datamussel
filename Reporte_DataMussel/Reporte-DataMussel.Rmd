@@ -1,0 +1,70 @@
+---
+title: "Reporte DataMussel"
+author: ''
+date: "11/9/2021"
+output:
+  ioslides_presentation: default
+  beamer_presentation:
+    theme: Warsaw
+    colortheme: default
+    fonttheme: structurebold
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(reticulate)
+library(kableExtra)
+library(magrittr)
+library(dplyr)
+use_condaenv("r-reticulate")
+reticulate::source_python("preprocesamiento.py")
+
+```
+
+```{r, echo=FALSE, mnessage=FALSE, warning=FALSE}
+empresa = 'Manuelita'
+mes = 'Sep'
+semana = 40
+```
+
+## Indicadores Materia Prima.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+tabla <- ingresos_totales_empresa(empresa)
+
+cols <- ncol(tabla)
+
+tabla %>% kbl(caption= paste("Ingreso materia prima ",empresa), digits=1, format.args=list(big.mark = ','),align = "c")  %>% kable_styling(full_width = T)
+
+```
+
+## Indicadores Materia Prima.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+tabla <- ingresos_totales_industria()
+
+cols <- ncol(tabla)
+
+tabla %>% kbl(caption= "Ingreso materia prima - Todas las industrias", digits=1, format.args=list(big.mark = ','),align = "c") %>% kable_styling(full_width = T)
+
+```
+
+## Indicadores Materia Prima.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+tabla <- ingresos_totales_otras(empresa)
+
+cols <- ncol(tabla)
+
+tabla %>% 
+  kbl(caption= "Ingreso materia prima - Otras Industrias",digits=1, format.args=list(big.mark = ','),align = "c")   %>% kable_styling(full_width = T)
+```
+
+## Detalle Materia Prima
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+tabla <- ingresos_acumulado(empresa)
+
+tabla %>% 
+  kbl(caption= "Detalle materia prima acumulado 2021",digits=1, format.args=list(big.mark = ','),col.names = c('Propietario', 'Indicadores', "Total", "Promedio","Total", "Promedio","Total", "Promedio", "N Empresas" ),align = "c") %>% kable_styling(full_width = T)
+```
